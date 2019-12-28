@@ -14,10 +14,14 @@ jobs:
     - run: |
         npm install
         npm run all
-  test: # make sure the action works on a clean machine without building
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        default: true
     - uses: ./
-      with: 
-        milliseconds: 1000
