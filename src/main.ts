@@ -26,7 +26,7 @@ async function run(): Promise<void> {
     await exec.exec(cargo, args)
   })
   const cargoOutput = await core.group('Running cargo-bloat', async () => {
-    const args = ['bloat', '--message-format=json', '--crates']
+    const args = ['bloat', '--release', '--message-format=json', '--crates']
     return await captureOutput(cargo, args)
   })
   core.info(`Output: ${cargoOutput}`)
