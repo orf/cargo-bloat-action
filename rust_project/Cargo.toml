@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 serde = "1.0.104"
+
+[profile.release]
+lto = true
