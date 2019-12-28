@@ -12,6 +12,9 @@ module.exports = {
     'prettier/@typescript-eslint',
     'plugin:jest/recommended',
   ],
+  rules: {
+    "@typescript-eslint/camelcase": "off"
+  },
   env: {
     node: true,
     es6: true,
