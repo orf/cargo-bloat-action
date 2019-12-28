@@ -41,7 +41,7 @@ async function run(): Promise<void> {
       text_size: bloatData['text-size'],
       build_id: context.action
     }
-    core.info(`Post data: ${data}`)
+    core.info(`Post data: ${JSON.stringify(data)}`)
     const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
     await axios.post(url, data)
   })
