@@ -994,7 +994,7 @@ function run() {
             yield exec.exec(cargo, args);
         }));
         const cargoOutput = yield core.group('Running cargo-bloat', () => __awaiter(this, void 0, void 0, function* () {
-            const args = ['bloat', '--message-format=json', '--crates'];
+            const args = ['bloat', '--release', '--message-format=json', '--crates'];
             return yield captureOutput(cargo, args);
         }));
         core.info(`Output: ${cargoOutput}`);
