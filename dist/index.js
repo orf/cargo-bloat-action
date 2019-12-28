@@ -4779,10 +4779,10 @@ function run() {
                 commit: context.sha,
                 crates: bloatData.crates,
                 file_size: bloatData['file-size'],
-                text_size: bloatData['text-size'],
+                text_size: bloatData['text-section-size'],
                 build_id: context.action
             };
-            core.info(`Post data: ${data}`);
+            core.info(`Post data: ${JSON.stringify(data)}`);
             const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
             yield axios_1.default.post(url, data);
         }));
