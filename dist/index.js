@@ -973,11 +973,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
 const io = __importStar(__webpack_require__(1));
+function captureOutput(cargo, args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let stdout = '';
+        const options = {};
+        options.listeners = {
+            stdout: (data) => {
+                stdout += data.toString();
+            }
+        };
+        yield exec.exec(cargo, args, options);
+        return stdout;
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const cargo = yield io.which('cargo', true);
-        const args = ['install', 'cargo-bloat'];
-        yield exec.exec(cargo, args);
+        yield core.group('Installing cargo-bloat', () => __awaiter(this, void 0, void 0, function* () {
+            const args = ['install', 'cargo-bloat'];
+            yield exec.exec(cargo, args);
+        }));
+        const cargoOutput = yield core.group('Running cargo-bloat', () => __awaiter(this, void 0, void 0, function* () {
+            const args = ['bloat', '--message-format=json', '--crates'];
+            return yield captureOutput(cargo, args);
+        }));
+        core.info(`Output: ${cargoOutput}`);
     });
 }
 function main() {
