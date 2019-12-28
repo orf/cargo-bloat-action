@@ -38,7 +38,7 @@ async function run(): Promise<void> {
       commit: context.sha,
       crates: bloatData.crates,
       file_size: bloatData['file-size'],
-      text_size: bloatData['text-size'],
+      text_size: bloatData['text-section-size'],
       build_id: context.action
     }
     core.info(`Post data: ${JSON.stringify(data)}`)
