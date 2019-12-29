@@ -4782,7 +4782,7 @@ function run() {
             const toolchain = toolchain_out.split(' ')[0];
             const rustc_version_out = yield captureOutput('rustc', ['--version']);
             const rustc = rustc_version_out.split(' ')[1];
-            const bloat = yield captureOutput('cargo', ['bloat', '--version']);
+            const bloat = (yield captureOutput('cargo', ['bloat', '--version'])).trim();
             core.debug(`Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`);
             return { toolchain, bloat, rustc };
         }));
