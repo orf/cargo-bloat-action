@@ -80,6 +80,12 @@ async function run(): Promise<void> {
     const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
     await axios.post(url, data)
   })
+
+  await core.group('Fetching', async () => {
+    const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
+    const res = await axios.post(url)
+    core.info(`Response: ${res.data}`)
+  })
 }
 
 async function main(): Promise<void> {
