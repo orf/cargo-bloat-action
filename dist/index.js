@@ -4748,7 +4748,7 @@ const exec = __importStar(__webpack_require__(986));
 const io = __importStar(__webpack_require__(1));
 const axios_1 = __importDefault(__webpack_require__(53));
 const github = __importStar(__webpack_require__(469));
-function captureOutput(cargo, args) {
+function captureOutput(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
         let stdout = '';
         const options = {};
@@ -4757,7 +4757,7 @@ function captureOutput(cargo, args) {
                 stdout += data.toString();
             }
         };
-        yield exec.exec(cargo, args, options);
+        yield exec.exec(cmd, args, options);
         return stdout;
     });
 }
@@ -4774,15 +4774,30 @@ function run() {
             return yield captureOutput(cargo, args);
         }));
         const bloatData = JSON.parse(cargoOutput);
+        const [toolchain_version, rustc_version] = yield core.group('Toolchain info', () => __awaiter(this, void 0, void 0, function* () {
+            const toolchain_out = yield captureOutput('rustup', [
+                'show',
+                'active-toolchain'
+            ]);
+            const toolchain_version = toolchain_out.split(' ')[0];
+            const rustc_version_out = yield captureOutput('rustc', ['--version']);
+            const rustc_version = rustc_version_out.split(' ')[1];
+            core.info(`Toolchain: ${toolchain_version} with rustc ${rustc_version}`);
+            return [toolchain_version, rustc_version];
+        }));
         yield core.group('Recording', () => __awaiter(this, void 0, void 0, function* () {
             const data = {
                 commit: context.sha,
                 crates: bloatData.crates,
                 file_size: bloatData['file-size'],
                 text_size: bloatData['text-section-size'],
-                build_id: context.action
+                build_id: context.action,
+                toolchain: toolchain_version,
+                rustc: rustc_version
             };
-            core.info(`Post data: ${JSON.stringify(data)}`);
+            core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`);
+            core.info(`Env: ${JSON.stringify(process.env, undefined, 2)}`);
+            core.info(`Context: ${JSON.stringify(context, undefined, 2)}`);
             const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
             yield axios_1.default.post(url, data);
         }));
