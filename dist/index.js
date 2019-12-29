@@ -4803,6 +4803,11 @@ function run() {
             const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
             yield axios_1.default.post(url, data);
         }));
+        yield core.group('Fetching', () => __awaiter(this, void 0, void 0, function* () {
+            const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`;
+            const res = yield axios_1.default.post(url);
+            core.info(`Response: ${res.data}`);
+        }));
     });
 }
 function main() {
