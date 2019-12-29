@@ -64,7 +64,7 @@ async function run(): Promise<void> {
     }
     core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
     core.info(`Env: ${JSON.stringify(process.env, undefined, 2)}`)
-    core.info(`Context: ${JSON.stringify(context, undefined, 2)}`)
+    core.info(`Context 2: ${JSON.stringify(context, undefined, 2)}`)
     const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
     await axios.post(url, data)
   })
