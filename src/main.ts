@@ -65,29 +65,31 @@ async function run(): Promise<void> {
     }
   )
 
-  await core.group('Recording', async () => {
-    const data = {
-      commit: context.sha,
-      crates: bloatData.crates,
-      file_size: bloatData['file-size'],
-      text_size: bloatData['text-section-size'],
-      build_id: context.action,
-      toolchain: versions.toolchain,
-      rustc: versions.rustc,
-      bloat: versions.bloat
-    }
-    core.debug(`Post data: ${JSON.stringify(data, undefined, 2)}`)
-    core.debug(`Env: ${JSON.stringify(process.env, undefined, 2)}`)
-    core.debug(`Context: ${JSON.stringify(context, undefined, 2)}`)
-    const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
-    await axios.post(url, data)
-  })
+  if (github.context.eventName == 'push') {
+    await core.group('Recording', async () => {
+      const data = {
+        commit: context.sha,
+        crates: bloatData.crates,
+        file_size: bloatData['file-size'],
+        text_size: bloatData['text-section-size'],
+        build_id: context.action,
+        toolchain: versions.toolchain,
+        rustc: versions.rustc,
+        bloat: versions.bloat
+      }
+      core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
+      const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
+      await axios.post(url, data)
+    })
+  }
 
-  await core.group('Fetching', async () => {
-    const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
-    const res = await axios.get(url)
-    core.info(`Response: ${JSON.stringify(res.data)}`)
-  })
+  if (github.context.eventName == 'pull_request') {
+    await core.group('Fetching last build', async () => {
+      const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
+      const res = await axios.get(url)
+      core.info(`Response: ${JSON.stringify(res.data)}`)
+    })
+  }
 }
 
 async function main(): Promise<void> {

@@ -4786,28 +4786,30 @@ function run() {
             core.debug(`Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`);
             return { toolchain, bloat, rustc };
         }));
-        yield core.group('Recording', () => __awaiter(this, void 0, void 0, function* () {
-            const data = {
-                commit: context.sha,
-                crates: bloatData.crates,
-                file_size: bloatData['file-size'],
-                text_size: bloatData['text-section-size'],
-                build_id: context.action,
-                toolchain: versions.toolchain,
-                rustc: versions.rustc,
-                bloat: versions.bloat
-            };
-            core.debug(`Post data: ${JSON.stringify(data, undefined, 2)}`);
-            core.debug(`Env: ${JSON.stringify(process.env, undefined, 2)}`);
-            core.debug(`Context: ${JSON.stringify(context, undefined, 2)}`);
-            const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
-            yield axios_1.default.post(url, data);
-        }));
-        yield core.group('Fetching', () => __awaiter(this, void 0, void 0, function* () {
-            const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`;
-            const res = yield axios_1.default.get(url);
-            core.info(`Response: ${JSON.stringify(res.data)}`);
-        }));
+        if (github.context.eventName == "push") {
+            yield core.group('Recording', () => __awaiter(this, void 0, void 0, function* () {
+                const data = {
+                    commit: context.sha,
+                    crates: bloatData.crates,
+                    file_size: bloatData['file-size'],
+                    text_size: bloatData['text-section-size'],
+                    build_id: context.action,
+                    toolchain: versions.toolchain,
+                    rustc: versions.rustc,
+                    bloat: versions.bloat
+                };
+                core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`);
+                const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
+                yield axios_1.default.post(url, data);
+            }));
+        }
+        if (github.context.eventName == "pull_request") {
+            yield core.group('Fetching last build', () => __awaiter(this, void 0, void 0, function* () {
+                const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`;
+                const res = yield axios_1.default.get(url);
+                core.info(`Response: ${JSON.stringify(res.data)}`);
+            }));
+        }
     });
 }
 function main() {
