@@ -4805,7 +4805,7 @@ function run() {
         }));
         yield core.group('Fetching', () => __awaiter(this, void 0, void 0, function* () {
             const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`;
-            const res = yield axios_1.default.post(url);
+            const res = yield axios_1.default.get(url);
             core.info(`Response: ${res.data}`);
         }));
     });
