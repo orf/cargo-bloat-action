@@ -4,6 +4,13 @@ import * as io from '@actions/io'
 import {ExecOptions} from '@actions/exec/lib/interfaces'
 import axios from 'axios'
 import * as github from '@actions/github'
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+
+declare class Versions {
+  rustc: string
+  toolchain: string
+  bloat: string
+}
 
 async function captureOutput(
   cmd: string,
@@ -34,21 +41,25 @@ async function run(): Promise<void> {
   })
   const bloatData = JSON.parse(cargoOutput)
 
-  const [toolchain_version, rustc_version] = await core.group(
+  const versions = await core.group(
     'Toolchain info',
-    async (): Promise<[string, string]> => {
+    async (): Promise<Versions> => {
       const toolchain_out = await captureOutput('rustup', [
         'show',
         'active-toolchain'
       ])
-      const toolchain_version = toolchain_out.split(' ')[0]
+      const toolchain = toolchain_out.split(' ')[0]
 
       const rustc_version_out = await captureOutput('rustc', ['--version'])
-      const rustc_version = rustc_version_out.split(' ')[1]
+      const rustc = rustc_version_out.split(' ')[1]
 
-      core.info(`Toolchain: ${toolchain_version} with rustc ${rustc_version}`)
+      const bloat = (await captureOutput('cargo', ['bloat', '--version'])).trim()
 
-      return [toolchain_version, rustc_version]
+      core.debug(
+        `Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`
+      )
+
+      return {toolchain, bloat, rustc}
     }
   )
 
@@ -59,14 +70,21 @@ async function run(): Promise<void> {
       file_size: bloatData['file-size'],
       text_size: bloatData['text-section-size'],
       build_id: context.action,
-      toolchain: toolchain_version,
-      rustc: rustc_version
+      toolchain: versions.toolchain,
+      rustc: versions.rustc,
+      bloat: versions.bloat
     }
-    core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
-    core.info(`Env: ${JSON.stringify(process.env, undefined, 2)}`)
-    core.info(`Context: ${JSON.stringify(context, undefined, 2)}`)
+    core.debug(`Post data: ${JSON.stringify(data, undefined, 2)}`)
+    core.debug(`Env: ${JSON.stringify(process.env, undefined, 2)}`)
+    core.debug(`Context: ${JSON.stringify(context, undefined, 2)}`)
     const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
     await axios.post(url, data)
+  })
+
+  await core.group('Fetching', async () => {
+    const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
+    const res = await axios.get(url)
+    core.info(`Response: ${JSON.stringify(res.data)}`)
   })
 }
 
