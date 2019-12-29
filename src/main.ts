@@ -83,7 +83,7 @@ async function run(): Promise<void> {
 
   await core.group('Fetching', async () => {
     const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
-    const res = await axios.post(url)
+    const res = await axios.get(url)
     core.info(`Response: ${res.data}`)
   })
 }
