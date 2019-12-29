@@ -53,7 +53,7 @@ async function run(): Promise<void> {
       const rustc_version_out = await captureOutput('rustc', ['--version'])
       const rustc = rustc_version_out.split(' ')[1]
 
-      const bloat = await captureOutput('cargo', ['bloat', '--version'])
+      const bloat = (await captureOutput('cargo', ['bloat', '--version'])).trim()
 
       core.debug(
         `Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`
