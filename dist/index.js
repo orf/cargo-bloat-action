@@ -4748,6 +4748,7 @@ const exec = __importStar(__webpack_require__(986));
 const io = __importStar(__webpack_require__(1));
 const axios_1 = __importDefault(__webpack_require__(53));
 const github = __importStar(__webpack_require__(469));
+const ALLOWED_EVENTS = ['pull_request', 'push'];
 function captureOutput(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
         let stdout = '';
@@ -4763,14 +4764,17 @@ function captureOutput(cmd, args) {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const context = github.context;
+        if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
+            core.setFailed(`This can only be used with the following events: ${ALLOWED_EVENTS.join(", ")}`);
+            return;
+        }
         const cargo = yield io.which('cargo', true);
         yield core.group('Installing cargo-bloat', () => __awaiter(this, void 0, void 0, function* () {
             const args = ['install', 'cargo-bloat'];
             yield exec.exec(cargo, args);
         }));
         const cargoOutput = yield core.group('Running cargo-bloat', () => __awaiter(this, void 0, void 0, function* () {
-            const args = ['bloat', '--release', '--message-format=json', '--crates'];
+            const args = ['bloat', '--release', '--message-format=json', '--crates', '-n', '0'];
             return yield captureOutput(cargo, args);
         }));
         const bloatData = JSON.parse(cargoOutput);
@@ -4786,30 +4790,32 @@ function run() {
             core.debug(`Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`);
             return { toolchain, bloat, rustc };
         }));
-        if (github.context.eventName == "push") {
+        const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`;
+        if (github.context.eventName == 'push') {
+            // Record the results
             yield core.group('Recording', () => __awaiter(this, void 0, void 0, function* () {
                 const data = {
-                    commit: context.sha,
+                    commit: github.context.sha,
                     crates: bloatData.crates,
                     file_size: bloatData['file-size'],
                     text_size: bloatData['text-section-size'],
-                    build_id: context.action,
+                    build_id: github.context.action,
                     toolchain: versions.toolchain,
                     rustc: versions.rustc,
                     bloat: versions.bloat
                 };
                 core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`);
-                const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`;
+                const url = `https://bloaty-backend.appspot.com/ingest/${repo_path}`;
                 yield axios_1.default.post(url, data);
             }));
+            return;
         }
-        if (github.context.eventName == "pull_request") {
-            yield core.group('Fetching last build', () => __awaiter(this, void 0, void 0, function* () {
-                const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`;
-                const res = yield axios_1.default.get(url);
-                core.info(`Response: ${JSON.stringify(res.data)}`);
-            }));
-        }
+        // A merge request
+        yield core.group('Fetching last build', () => __awaiter(this, void 0, void 0, function* () {
+            const url = `https://bloaty-backend.appspot.com/query/${repo_path}`;
+            const res = yield axios_1.default.get(url);
+            core.info(`Response: ${JSON.stringify(res.data)}`);
+        }));
     });
 }
 function main() {
