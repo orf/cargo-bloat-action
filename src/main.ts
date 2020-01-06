@@ -6,6 +6,8 @@ import axios from 'axios'
 import * as github from '@actions/github'
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 
+const ALLOWED_EVENTS = ['pull_request', 'push']
+
 declare class Versions {
   rustc: string
   toolchain: string
@@ -29,14 +31,29 @@ async function captureOutput(
 }
 
 async function run(): Promise<void> {
-  const context = github.context
+  if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
+    core.setFailed(
+      `This can only be used with the following events: ${ALLOWED_EVENTS.join(
+        ', '
+      )}`
+    )
+    return
+  }
+
   const cargo: string = await io.which('cargo', true)
   await core.group('Installing cargo-bloat', async () => {
     const args = ['install', 'cargo-bloat']
     await exec.exec(cargo, args)
   })
   const cargoOutput = await core.group('Running cargo-bloat', async () => {
-    const args = ['bloat', '--release', '--message-format=json', '--crates']
+    const args = [
+      'bloat',
+      '--release',
+      '--message-format=json',
+      '--crates',
+      '-n',
+      '0'
+    ]
     return await captureOutput(cargo, args)
   })
   const bloatData = JSON.parse(cargoOutput)
@@ -65,31 +82,34 @@ async function run(): Promise<void> {
     }
   )
 
+  const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`
+
   if (github.context.eventName == 'push') {
+    // Record the results
     await core.group('Recording', async () => {
       const data = {
-        commit: context.sha,
+        commit: github.context.sha,
         crates: bloatData.crates,
         file_size: bloatData['file-size'],
         text_size: bloatData['text-section-size'],
-        build_id: context.action,
+        build_id: github.context.action,
         toolchain: versions.toolchain,
         rustc: versions.rustc,
         bloat: versions.bloat
       }
       core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
-      const url = `https://bloaty-backend.appspot.com/ingest/${context.repo.owner}/${context.repo.repo}`
+      const url = `https://bloaty-backend.appspot.com/ingest/${repo_path}`
       await axios.post(url, data)
     })
+    return
   }
 
-  if (github.context.eventName == 'pull_request') {
-    await core.group('Fetching last build', async () => {
-      const url = `https://bloaty-backend.appspot.com/query/${context.repo.owner}/${context.repo.repo}`
-      const res = await axios.get(url)
-      core.info(`Response: ${JSON.stringify(res.data)}`)
-    })
-  }
+  // A merge request
+  await core.group('Fetching last build', async () => {
+    const url = `https://bloaty-backend.appspot.com/query/${repo_path}`
+    const res = await axios.get(url)
+    core.info(`Response: ${JSON.stringify(res.data)}`)
+  })
 }
 
 async function main(): Promise<void> {

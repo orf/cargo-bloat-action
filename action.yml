@@ -1,6 +1,9 @@
 name: 'cargo-bloat'
 description: 'Track rust bloat across builds'
 author: 'orf'
+branding:
+  icon: box
+  color: blue
 #inputs:
 #  myInput:
 #    description: 'input description here'
