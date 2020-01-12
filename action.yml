@@ -4,10 +4,10 @@ author: 'orf'
 branding:
   icon: box
   color: blue
-#inputs:
-#  myInput:
-#    description: 'input description here'
-#    default: 'default value if applicable'
+inputs:
+  token:
+    description: 'Github token to use'
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
