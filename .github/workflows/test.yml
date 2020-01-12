@@ -25,3 +25,5 @@ jobs:
         override: true
         default: true
     - uses: ./
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
