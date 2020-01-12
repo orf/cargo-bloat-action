@@ -4790,6 +4790,7 @@ function captureOutput(cmd, args) {
     });
 }
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('token');
         if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
@@ -4862,11 +4863,10 @@ function run() {
   query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $pr) {
+        id,
         comments(first: 100) {
           nodes {
-            author {
-              login,
-            }
+            viewerDidAuthor,
             body
           }
         }
@@ -4876,9 +4876,25 @@ function run() {
   `, {
             owner: github_1.context.issue.owner,
             repo: github_1.context.issue.repo,
-            pr: github_1.context.issue.number,
+            pr: github_1.context.issue.number
         });
         core.info(`Response: ${JSON.stringify(thing)}`);
+        const pullRequestId = (_a = thing) === null || _a === void 0 ? void 0 : _a.repository.pullRequest.id;
+        core.info(`Response: ${JSON.stringify(pullRequestId)}`);
+        yield graphqlWithAuth(`
+
+    mutation addComment($body: String!, $id: ID!) {
+      addComment(input: {
+        body: $body,
+        subjectId: $id,
+      }) {
+        clientMutationId
+      }
+    }
+  `, {
+            body: 'test comment',
+            id: pullRequestId
+        });
     });
 }
 function main() {

@@ -126,11 +126,10 @@ async function run(): Promise<void> {
   query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $pr) {
+        id,
         comments(first: 100) {
           nodes {
-            author {
-              login,
-            }
+            viewerDidAuthor,
             body
           }
         }
@@ -146,6 +145,28 @@ async function run(): Promise<void> {
   )
 
   core.info(`Response: ${JSON.stringify(thing)}`)
+
+  const pullRequestId = thing?.repository.pullRequest.id
+
+  core.info(`Response: ${JSON.stringify(pullRequestId)}`)
+
+  await graphqlWithAuth(
+    `
+
+    mutation addComment($body: String!, $id: ID!) {
+      addComment(input: {
+        body: $body,
+        subjectId: $id,
+      }) {
+        clientMutationId
+      }
+    }
+  `,
+    {
+      body: 'test comment',
+      id: pullRequestId
+    }
+  )
 }
 
 async function main(): Promise<void> {
