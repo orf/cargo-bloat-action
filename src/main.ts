@@ -139,7 +139,7 @@ async function run(): Promise<void> {
   `,
     {
       owner: context.repo.owner,
-      name: context.repo.repo
+      repo: context.repo.repo
     }
   )
 
