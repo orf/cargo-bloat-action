@@ -4859,9 +4859,9 @@ function run() {
         });
         console.log(`Number: ${github.context.issue.number}`);
         const thing = yield graphqlWithAuth(`
-  query issueComments($owner: String!, $repo: String!) {
+  query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
-      pullRequest(number: 22) {
+      pullRequest(number: $pr) {
         comments(first: 100) {
           nodes {
             author {
@@ -4874,8 +4874,9 @@ function run() {
     }
   }
   `, {
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo
+            owner: github_1.context.issue.owner,
+            repo: github_1.context.issue.repo,
+            pr: github_1.context.issue.number,
         });
         core.info(`Response: ${JSON.stringify(thing)}`);
     });

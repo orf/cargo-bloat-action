@@ -123,9 +123,9 @@ async function run(): Promise<void> {
 
   const thing = await graphqlWithAuth(
     `
-  query issueComments($owner: String!, $repo: String!) {
+  query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
-      pullRequest(number: 22) {
+      pullRequest(number: $pr) {
         comments(first: 100) {
           nodes {
             author {
@@ -139,8 +139,9 @@ async function run(): Promise<void> {
   }
   `,
     {
-      owner: context.repo.owner,
-      repo: context.repo.repo
+      owner: context.issue.owner,
+      repo: context.issue.repo,
+      pr: context.issue.number
     }
   )
 
