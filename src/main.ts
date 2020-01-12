@@ -106,11 +106,26 @@ async function run(): Promise<void> {
   }
 
   // A merge request
-  await core.group('Fetching last build', async () => {
+  const data = await core.group('Fetching last build', async () => {
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch?repo=${repo_path}`
     const res = await axios.get(url)
     core.info(`Response: ${JSON.stringify(res.data)}`)
   })
+
+  const graphqlWithAuth = graphql.defaults({
+    headers: {
+      authorization: `bearer ${token}`
+    }
+  })
+
+  const thing = await graphqlWithAuth(`
+  query {
+    viewer {
+      login
+    }
+  }`)
+
+  core.info(`Response: ${JSON.stringify(thing)}`)
 }
 
 async function main(): Promise<void> {
