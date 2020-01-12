@@ -122,7 +122,7 @@ async function run(): Promise<void> {
 
   const thing = await graphqlWithAuth(
     `
-  query {
+  query issueComments($owner: String!, $repo: String!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: 22) {
         comments(first: 100) {

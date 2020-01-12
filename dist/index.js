@@ -4858,7 +4858,7 @@ function run() {
         });
         console.log(`Number: ${github.context.issue.number}`);
         const thing = yield graphqlWithAuth(`
-  query {
+  query issueComments($owner: String!, $repo: String!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: 22) {
         comments(first: 100) {
