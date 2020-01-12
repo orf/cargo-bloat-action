@@ -4,7 +4,7 @@ import * as io from '@actions/io'
 import {ExecOptions} from '@actions/exec/lib/interfaces'
 import axios from 'axios'
 import * as github from '@actions/github'
-import {WebhookPayload} from '@actions/github/lib/interfaces'
+import {graphql} from '@octokit/graphql'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -31,7 +31,7 @@ async function captureOutput(
 }
 
 async function run(): Promise<void> {
-  const token = core.getInput("token")
+  const token = core.getInput('token')
   if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
     core.setFailed(
       `This can only be used with the following events: ${ALLOWED_EVENTS.join(
@@ -89,11 +89,11 @@ async function run(): Promise<void> {
     // Record the results
     await core.group('Recording', async () => {
       const data = {
+        repo: repo_path,
         commit: github.context.sha,
         crates: bloatData.crates,
         file_size: bloatData['file-size'],
         text_size: bloatData['text-section-size'],
-        build_id: github.context.action,
         toolchain: versions.toolchain,
         rustc: versions.rustc,
         bloat: versions.bloat
@@ -107,7 +107,7 @@ async function run(): Promise<void> {
 
   // A merge request
   await core.group('Fetching last build', async () => {
-    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
+    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch?repo=${repo_path}`
     const res = await axios.get(url)
     core.info(`Response: ${JSON.stringify(res.data)}`)
   })
