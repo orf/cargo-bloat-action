@@ -4776,6 +4776,10 @@ const github = __importStar(__webpack_require__(469));
 const graphql_1 = __webpack_require__(898);
 const github_1 = __webpack_require__(469);
 const ALLOWED_EVENTS = ['pull_request', 'push'];
+//
+// function compareSnapshots(current, master): SnapshotDifference {
+//
+// }
 function captureOutput(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
         let stdout = '';
@@ -4835,8 +4839,8 @@ function run() {
                     repo: repo_path,
                     commit: github.context.sha,
                     crates: bloatData.crates,
-                    file_size: bloatData['file-size'],
-                    text_size: bloatData['text-section-size'],
+                    'file-size': bloatData['file-size'],
+                    'text-section-size': bloatData['text-section-size'],
                     toolchain: versions.toolchain,
                     rustc: versions.rustc,
                     bloat: versions.bloat

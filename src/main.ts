@@ -6,6 +6,7 @@ import axios from 'axios'
 import * as github from '@actions/github'
 import {graphql} from '@octokit/graphql'
 import {context} from '@actions/github'
+import filesize from 'filesize'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -14,6 +15,14 @@ declare class Versions {
   toolchain: string
   bloat: string
 }
+
+declare class SnapshotDifference {
+  sizeDifference: number
+}
+//
+// function compareSnapshots(current, master): SnapshotDifference {
+//
+// }
 
 async function captureOutput(
   cmd: string,
@@ -94,8 +103,8 @@ async function run(): Promise<void> {
         repo: repo_path,
         commit: github.context.sha,
         crates: bloatData.crates,
-        file_size: bloatData['file-size'],
-        text_size: bloatData['text-section-size'],
+        'file-size': bloatData['file-size'],
+        'text-section-size': bloatData['text-section-size'],
         toolchain: versions.toolchain,
         rustc: versions.rustc,
         bloat: versions.bloat
