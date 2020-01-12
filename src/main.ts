@@ -52,6 +52,7 @@ async function run(): Promise<void> {
       'bloat',
       '--release',
       '--message-format=json',
+      '--all-features',
       '--crates',
       '-n',
       '0'
