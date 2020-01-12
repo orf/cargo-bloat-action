@@ -4776,6 +4776,10 @@ const github = __importStar(__webpack_require__(469));
 const graphql_1 = __webpack_require__(898);
 const github_1 = __webpack_require__(469);
 const ALLOWED_EVENTS = ['pull_request', 'push'];
+//
+// function compareSnapshots(current, master): SnapshotDifference {
+//
+// }
 function captureOutput(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
         let stdout = '';
@@ -4790,6 +4794,7 @@ function captureOutput(cmd, args) {
     });
 }
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('token');
         if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
@@ -4806,6 +4811,7 @@ function run() {
                 'bloat',
                 '--release',
                 '--message-format=json',
+                '--all-features',
                 '--crates',
                 '-n',
                 '0'
@@ -4833,8 +4839,8 @@ function run() {
                     repo: repo_path,
                     commit: github.context.sha,
                     crates: bloatData.crates,
-                    file_size: bloatData['file-size'],
-                    text_size: bloatData['text-section-size'],
+                    'file-size': bloatData['file-size'],
+                    'text-section-size': bloatData['text-section-size'],
                     toolchain: versions.toolchain,
                     rustc: versions.rustc,
                     bloat: versions.bloat
@@ -4858,14 +4864,13 @@ function run() {
         });
         console.log(`Number: ${github.context.issue.number}`);
         const thing = yield graphqlWithAuth(`
-  query issueComments($owner: String!, $repo: String!) {
+  query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
-      pullRequest(number: 22) {
+      pullRequest(number: $pr) {
+        id,
         comments(first: 100) {
           nodes {
-            author {
-              login,
-            }
+            viewerDidAuthor,
             body
           }
         }
@@ -4873,10 +4878,27 @@ function run() {
     }
   }
   `, {
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo
+            owner: github_1.context.issue.owner,
+            repo: github_1.context.issue.repo,
+            pr: github_1.context.issue.number
         });
         core.info(`Response: ${JSON.stringify(thing)}`);
+        const pullRequestId = (_a = thing) === null || _a === void 0 ? void 0 : _a.repository.pullRequest.id;
+        core.info(`Response: ${JSON.stringify(pullRequestId)}`);
+        yield graphqlWithAuth(`
+
+    mutation addComment($body: String!, $id: ID!) {
+      addComment(input: {
+        body: $body,
+        subjectId: $id,
+      }) {
+        clientMutationId
+      }
+    }
+  `, {
+            body: 'test comment',
+            id: pullRequestId
+        });
     });
 }
 function main() {

@@ -6,6 +6,7 @@ import axios from 'axios'
 import * as github from '@actions/github'
 import {graphql} from '@octokit/graphql'
 import {context} from '@actions/github'
+import filesize from 'filesize'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -14,6 +15,14 @@ declare class Versions {
   toolchain: string
   bloat: string
 }
+
+declare class SnapshotDifference {
+  sizeDifference: number
+}
+//
+// function compareSnapshots(current, master): SnapshotDifference {
+//
+// }
 
 async function captureOutput(
   cmd: string,
@@ -52,6 +61,7 @@ async function run(): Promise<void> {
       'bloat',
       '--release',
       '--message-format=json',
+      '--all-features',
       '--crates',
       '-n',
       '0'
@@ -93,8 +103,8 @@ async function run(): Promise<void> {
         repo: repo_path,
         commit: github.context.sha,
         crates: bloatData.crates,
-        file_size: bloatData['file-size'],
-        text_size: bloatData['text-section-size'],
+        'file-size': bloatData['file-size'],
+        'text-section-size': bloatData['text-section-size'],
         toolchain: versions.toolchain,
         rustc: versions.rustc,
         bloat: versions.bloat
@@ -122,14 +132,13 @@ async function run(): Promise<void> {
 
   const thing = await graphqlWithAuth(
     `
-  query issueComments($owner: String!, $repo: String!) {
+  query issueComments($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
-      pullRequest(number: 22) {
+      pullRequest(number: $pr) {
+        id,
         comments(first: 100) {
           nodes {
-            author {
-              login,
-            }
+            viewerDidAuthor,
             body
           }
         }
@@ -138,12 +147,35 @@ async function run(): Promise<void> {
   }
   `,
     {
-      owner: context.repo.owner,
-      repo: context.repo.repo
+      owner: context.issue.owner,
+      repo: context.issue.repo,
+      pr: context.issue.number
     }
   )
 
   core.info(`Response: ${JSON.stringify(thing)}`)
+
+  const pullRequestId = thing?.repository.pullRequest.id
+
+  core.info(`Response: ${JSON.stringify(pullRequestId)}`)
+
+  await graphqlWithAuth(
+    `
+
+    mutation addComment($body: String!, $id: ID!) {
+      addComment(input: {
+        body: $body,
+        subjectId: $id,
+      }) {
+        clientMutationId
+      }
+    }
+  `,
+    {
+      body: 'test comment',
+      id: pullRequestId
+    }
+  )
 }
 
 async function main(): Promise<void> {
