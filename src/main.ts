@@ -31,6 +31,7 @@ async function captureOutput(
 }
 
 async function run(): Promise<void> {
+  const token = core.getInput("token")
   if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
     core.setFailed(
       `This can only be used with the following events: ${ALLOWED_EVENTS.join(
@@ -98,7 +99,7 @@ async function run(): Promise<void> {
         bloat: versions.bloat
       }
       core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
-      const url = `https://bloaty-backend.appspot.com/ingest/${repo_path}`
+      const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`
       await axios.post(url, data)
     })
     return
@@ -106,7 +107,7 @@ async function run(): Promise<void> {
 
   // A merge request
   await core.group('Fetching last build', async () => {
-    const url = `https://bloaty-backend.appspot.com/query/${repo_path}`
+    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
     const res = await axios.get(url)
     core.info(`Response: ${JSON.stringify(res.data)}`)
   })
