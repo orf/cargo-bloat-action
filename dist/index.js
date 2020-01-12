@@ -4874,7 +4874,7 @@ function run() {
   }
   `, {
             owner: github_1.context.repo.owner,
-            name: github_1.context.repo.repo
+            repo: github_1.context.repo.repo
         });
         core.info(`Response: ${JSON.stringify(thing)}`);
     });
