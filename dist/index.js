@@ -4773,6 +4773,8 @@ const exec = __importStar(__webpack_require__(986));
 const io = __importStar(__webpack_require__(1));
 const axios_1 = __importDefault(__webpack_require__(53));
 const github = __importStar(__webpack_require__(469));
+const graphql_1 = __webpack_require__(898);
+const github_1 = __webpack_require__(469);
 const ALLOWED_EVENTS = ['pull_request', 'push'];
 function captureOutput(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -4844,11 +4846,37 @@ function run() {
             return;
         }
         // A merge request
-        yield core.group('Fetching last build', () => __awaiter(this, void 0, void 0, function* () {
+        const lastBuildData = yield core.group('Fetching last build', () => __awaiter(this, void 0, void 0, function* () {
             const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch?repo=${repo_path}`;
             const res = yield axios_1.default.get(url);
             core.info(`Response: ${JSON.stringify(res.data)}`);
         }));
+        const graphqlWithAuth = graphql_1.graphql.defaults({
+            headers: {
+                authorization: `bearer ${token}`
+            }
+        });
+        console.log(`Number: ${github.context.issue.number}`);
+        const thing = yield graphqlWithAuth(`
+  query issueComments($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: 22) {
+        comments(first: 100) {
+          nodes {
+            author {
+              login,
+            }
+            body
+          }
+        }
+      }
+    }
+  }
+  `, {
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo
+        });
+        core.info(`Response: ${JSON.stringify(thing)}`);
     });
 }
 function main() {

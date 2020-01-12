@@ -5,6 +5,7 @@ import {ExecOptions} from '@actions/exec/lib/interfaces'
 import axios from 'axios'
 import * as github from '@actions/github'
 import {graphql} from '@octokit/graphql'
+import {context} from '@actions/github'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -106,11 +107,43 @@ async function run(): Promise<void> {
   }
 
   // A merge request
-  await core.group('Fetching last build', async () => {
+  const lastBuildData = await core.group('Fetching last build', async () => {
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch?repo=${repo_path}`
     const res = await axios.get(url)
     core.info(`Response: ${JSON.stringify(res.data)}`)
   })
+
+  const graphqlWithAuth = graphql.defaults({
+    headers: {
+      authorization: `bearer ${token}`
+    }
+  })
+  console.log(`Number: ${github.context.issue.number}`)
+
+  const thing = await graphqlWithAuth(
+    `
+  query issueComments($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: 22) {
+        comments(first: 100) {
+          nodes {
+            author {
+              login,
+            }
+            body
+          }
+        }
+      }
+    }
+  }
+  `,
+    {
+      owner: context.repo.owner,
+      repo: context.repo.repo
+    }
+  )
+
+  core.info(`Response: ${JSON.stringify(thing)}`)
 }
 
 async function main(): Promise<void> {
