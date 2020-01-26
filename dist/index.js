@@ -4887,7 +4887,7 @@ async function getToolchainVersions() {
 exports.getToolchainVersions = getToolchainVersions;
 async function installCargoBloat() {
     const cargo = await io.which('cargo', true);
-    const args = ['install', 'cargo-bloat'];
+    const args = ['install', 'cargo-bloat', '--debug'];
     await exec.exec(cargo, args);
 }
 exports.installCargoBloat = installCargoBloat;
