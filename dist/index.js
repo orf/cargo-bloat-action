@@ -9151,8 +9151,21 @@ function createSnapshotComment(toolchain, diff) {
     }
     const crateTable = text_table_1.default(crateTableRows);
     const sizeTable = text_table_1.default(sizeTableRows);
+    const emojiList = {
+        apple: 'apple',
+        windows: 'office',
+        arm: 'muscle',
+        linux: 'cowboy_hat_face' // Why not?
+    };
+    let selectedEmoji = 'crab';
+    for (const [key, emoji] of Object.entries(emojiList)) {
+        if (toolchain.includes(key)) {
+            selectedEmoji = emoji;
+            break;
+        }
+    }
     return `
-:crab: Cargo bloat for toolchain **${toolchain}** :crab:
+:${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
 
 \`\`\`diff
 @@ Size breakdown @@
