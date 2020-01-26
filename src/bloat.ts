@@ -53,7 +53,7 @@ export async function getToolchainVersions(): Promise<Versions> {
 
 export async function installCargoBloat(): Promise<void> {
   const cargo: string = await io.which('cargo', true)
-  const args = ['install', 'cargo-bloat']
+  const args = ['install', 'cargo-bloat', '--debug']
   await exec.exec(cargo, args)
 }
 
