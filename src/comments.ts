@@ -92,7 +92,9 @@ export function createSnapshotComment(
     sizeTableRows.push(['- Size', fileSize(diff.oldSize)])
     sizeTableRows.push([
       '+ Size',
-      `${fileSize(diff.currentSize)} (${fileSize(diff.sizeDifference)})`
+      `${fileSize(diff.currentSize)} (${
+        diff.sizeDifference > 0 ? '+' : ''
+      }${fileSize(diff.sizeDifference)})`
     ])
   } else {
     sizeTableRows.push(['Size', fileSize(diff.currentTextSize)])
@@ -102,7 +104,9 @@ export function createSnapshotComment(
     sizeTableRows.push(['- Text Size', fileSize(diff.oldTextSize)])
     sizeTableRows.push([
       '+ Text Size',
-      `${fileSize(diff.currentTextSize)} (${fileSize(diff.textDifference)})`
+      `${fileSize(diff.currentTextSize)} (${
+        diff.textDifference > 0 ? '+' : ''
+      }${fileSize(diff.textDifference)})`
     ])
   } else {
     sizeTableRows.push(['Text size', fileSize(diff.currentTextSize)])
