@@ -9141,7 +9141,7 @@ function createSnapshotComment(toolchain, diff) {
     });
     const sizeTableRows = [];
     if (diff.sizeDifference) {
-        sizeTableRows.push(['- Size', filesize_1.default(diff.oldSize), ""]);
+        sizeTableRows.push(['- Size', filesize_1.default(diff.oldSize), '']);
         sizeTableRows.push([
             '+ Size',
             `${filesize_1.default(diff.currentSize)}`,
@@ -9149,10 +9149,10 @@ function createSnapshotComment(toolchain, diff) {
         ]);
     }
     else {
-        sizeTableRows.push(['Size', filesize_1.default(diff.currentTextSize), ""]);
+        sizeTableRows.push(['Size', filesize_1.default(diff.currentTextSize), '']);
     }
     if (diff.textDifference) {
-        sizeTableRows.push(['- Text Size', filesize_1.default(diff.oldTextSize), ""]);
+        sizeTableRows.push(['- Text Size', filesize_1.default(diff.oldTextSize), '']);
         sizeTableRows.push([
             '+ Text Size',
             `${filesize_1.default(diff.currentTextSize)}`,
@@ -9160,7 +9160,7 @@ function createSnapshotComment(toolchain, diff) {
         ]);
     }
     else {
-        sizeTableRows.push(['Text size', filesize_1.default(diff.currentTextSize), ""]);
+        sizeTableRows.push(['Text size', filesize_1.default(diff.currentTextSize), '']);
     }
     const crateTable = text_table_1.default(crateTableRows);
     const sizeTable = text_table_1.default(sizeTableRows);
@@ -9190,6 +9190,8 @@ ${sizeTable}
 <details>
 <summary>Size difference per crate</summary>
 <br />
+
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
 
 \`\`\`diff
 @@ Breakdown per crate @@
