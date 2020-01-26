@@ -4621,7 +4621,7 @@ async function run() {
     }
     // A merge request
     const masterSnapshot = await core.group('Fetching last build', async () => {
-        return await snapshots_1.fetchSnapshot(repo_path);
+        return await snapshots_1.fetchSnapshot(repo_path, versions.toolchain);
     });
     github_1.context.issue.number;
     await core.group('Posting comment', async () => {
@@ -13364,9 +13364,9 @@ function compareSnapshots(current, master) {
     };
 }
 exports.compareSnapshots = compareSnapshots;
-async function fetchSnapshot(repo) {
+async function fetchSnapshot(repo, toolchain) {
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`;
-    const res = await axios_1.default.get(url, { params: { repo } });
+    const res = await axios_1.default.get(url, { params: { repo, toolchain } });
     core.info(`Response: ${JSON.stringify(res.data)}`);
     return res.data;
 }

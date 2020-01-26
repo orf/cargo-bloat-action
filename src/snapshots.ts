@@ -94,9 +94,12 @@ export function compareSnapshots(
   }
 }
 
-export async function fetchSnapshot(repo: string): Promise<Snapshot> {
+export async function fetchSnapshot(
+  repo: string,
+  toolchain: string
+): Promise<Snapshot> {
   const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
-  const res = await axios.get(url, {params: {repo}})
+  const res = await axios.get(url, {params: {repo, toolchain}})
   core.info(`Response: ${JSON.stringify(res.data)}`)
   return res.data as Snapshot
 }

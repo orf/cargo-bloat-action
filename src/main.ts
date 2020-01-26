@@ -69,7 +69,7 @@ async function run(): Promise<void> {
   const masterSnapshot = await core.group(
     'Fetching last build',
     async (): Promise<Snapshot> => {
-      return await fetchSnapshot(repo_path)
+      return await fetchSnapshot(repo_path, versions.toolchain)
     }
   )
   context.issue.number
