@@ -4,6 +4,6 @@ members = [
     "rust_project"
 ]
 
-[profile.release]
-panic = "abort"
-lto = true
+#[profile.release]
+#panic = "abort"
+#lto = true
