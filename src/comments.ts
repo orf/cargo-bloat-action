@@ -90,14 +90,20 @@ export function createSnapshotComment(
   const sizeTableRows: Array<[string, string]> = []
   if (diff.sizeDifference) {
     sizeTableRows.push(['- Size', fileSize(diff.oldSize)])
-    sizeTableRows.push(['+ Size', fileSize(diff.currentSize)])
+    sizeTableRows.push([
+      '+ Size',
+      `${fileSize(diff.currentSize)} (${fileSize(diff.sizeDifference)})`
+    ])
   } else {
     sizeTableRows.push(['Size', fileSize(diff.currentTextSize)])
   }
 
   if (diff.textDifference) {
     sizeTableRows.push(['- Text Size', fileSize(diff.oldTextSize)])
-    sizeTableRows.push(['+ Text Size', fileSize(diff.currentTextSize)])
+    sizeTableRows.push([
+      '+ Text Size',
+      `${fileSize(diff.currentTextSize)} (${fileSize(diff.textDifference)})`
+    ])
   } else {
     sizeTableRows.push(['Text size', fileSize(diff.currentTextSize)])
   }
@@ -143,23 +149,4 @@ ${crateTable}
 
 </details>
 `
-
-  // return `
-  //
-  //
-  // # Summary
-  //
-  // * Binary size: ${fileSize(diff.sizeDifference)}
-  // * Text size: ${fileSize(diff.textDifference)}
-  //
-  // # Diff
-  //
-  // * Added: ${added.length} packages (${fileSize(addedSize)})
-  // * ${added.map(c => c.name).join(', ')}
-  //
-  // * Removed: ${removed.length} packages (${fileSize(removedSize)})
-  // * ${removed.map(c => c.name).join(', ')}
-  //
-  // * changed: ${changed.map(c => c.name).join(', ')}
-  // `
 }
