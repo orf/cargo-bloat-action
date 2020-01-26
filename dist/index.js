@@ -9141,24 +9141,26 @@ function createSnapshotComment(toolchain, diff) {
     });
     const sizeTableRows = [];
     if (diff.sizeDifference) {
-        sizeTableRows.push(['- Size', filesize_1.default(diff.oldSize)]);
+        sizeTableRows.push(['- Size', filesize_1.default(diff.oldSize), ""]);
         sizeTableRows.push([
             '+ Size',
-            `${filesize_1.default(diff.currentSize)} (${diff.sizeDifference > 0 ? '+' : ''}${filesize_1.default(diff.sizeDifference)})`
+            `${filesize_1.default(diff.currentSize)}`,
+            `${diff.sizeDifference > 0 ? '+' : ''}${filesize_1.default(diff.sizeDifference)}`
         ]);
     }
     else {
-        sizeTableRows.push(['Size', filesize_1.default(diff.currentTextSize)]);
+        sizeTableRows.push(['Size', filesize_1.default(diff.currentTextSize), ""]);
     }
     if (diff.textDifference) {
-        sizeTableRows.push(['- Text Size', filesize_1.default(diff.oldTextSize)]);
+        sizeTableRows.push(['- Text Size', filesize_1.default(diff.oldTextSize), ""]);
         sizeTableRows.push([
             '+ Text Size',
-            `${filesize_1.default(diff.currentTextSize)} (${diff.textDifference > 0 ? '+' : ''}${filesize_1.default(diff.textDifference)})`
+            `${filesize_1.default(diff.currentTextSize)}`,
+            `${diff.textDifference > 0 ? '+' : ''}${filesize_1.default(diff.textDifference)}`
         ]);
     }
     else {
-        sizeTableRows.push(['Text size', filesize_1.default(diff.currentTextSize)]);
+        sizeTableRows.push(['Text size', filesize_1.default(diff.currentTextSize), ""]);
     }
     const crateTable = text_table_1.default(crateTableRows);
     const sizeTable = text_table_1.default(sizeTableRows);

@@ -87,29 +87,27 @@ export function createSnapshotComment(
     }
   })
 
-  const sizeTableRows: Array<[string, string]> = []
+  const sizeTableRows: Array<[string, string, string]> = []
   if (diff.sizeDifference) {
-    sizeTableRows.push(['- Size', fileSize(diff.oldSize)])
+    sizeTableRows.push(['- Size', fileSize(diff.oldSize), ''])
     sizeTableRows.push([
       '+ Size',
-      `${fileSize(diff.currentSize)} (${
-        diff.sizeDifference > 0 ? '+' : ''
-      }${fileSize(diff.sizeDifference)})`
+      `${fileSize(diff.currentSize)}`,
+      `${diff.sizeDifference > 0 ? '+' : ''}${fileSize(diff.sizeDifference)}`
     ])
   } else {
-    sizeTableRows.push(['Size', fileSize(diff.currentTextSize)])
+    sizeTableRows.push(['Size', fileSize(diff.currentTextSize), ''])
   }
 
   if (diff.textDifference) {
-    sizeTableRows.push(['- Text Size', fileSize(diff.oldTextSize)])
+    sizeTableRows.push(['- Text Size', fileSize(diff.oldTextSize), ''])
     sizeTableRows.push([
       '+ Text Size',
-      `${fileSize(diff.currentTextSize)} (${
-        diff.textDifference > 0 ? '+' : ''
-      }${fileSize(diff.textDifference)})`
+      `${fileSize(diff.currentTextSize)}`,
+      `${diff.textDifference > 0 ? '+' : ''}${fileSize(diff.textDifference)}`
     ])
   } else {
-    sizeTableRows.push(['Text size', fileSize(diff.currentTextSize)])
+    sizeTableRows.push(['Text size', fileSize(diff.currentTextSize), ''])
   }
 
   const crateTable = table(crateTableRows)
