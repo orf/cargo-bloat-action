@@ -9128,7 +9128,7 @@ function createSnapshotComment(toolchain, diff) {
             return;
         }
         if (d.old === d.new) {
-            crateTableRows.push([`- ${d.name}`, filesize_1.default(d.new)]);
+            crateTableRows.push([`${d.name}`, filesize_1.default(d.new)]);
         }
         else {
             if (d.old) {

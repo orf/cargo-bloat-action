@@ -76,7 +76,7 @@ export function createSnapshotComment(
       return
     }
     if (d.old === d.new) {
-      crateTableRows.push([`- ${d.name}`, fileSize(d.new as number)])
+      crateTableRows.push([`${d.name}`, fileSize(d.new as number)])
     } else {
       if (d.old) {
         crateTableRows.push([`- ${d.name}`, fileSize(d.old)])
