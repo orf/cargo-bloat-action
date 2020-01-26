@@ -5,5 +5,5 @@ members = [
 ]
 
 [profile.release]
-panic = "abort"
-#lto = true
+#panic = "abort"
+lto = true
