@@ -1,47 +1,24 @@
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
-import * as io from '@actions/io'
-import {ExecOptions} from '@actions/exec/lib/interfaces'
-import axios from 'axios'
 import * as github from '@actions/github'
-import {graphql} from '@octokit/graphql'
+import {
+  compareSnapshots,
+  Snapshot,
+  fetchSnapshot,
+  recordSnapshot
+} from './snapshots'
+import {
+  BloatOutput,
+  getToolchainVersions,
+  installCargoBloat,
+  runCargoBloat,
+  Versions
+} from './bloat'
+import {createOrUpdateComment, createSnapshotComment} from './comments'
 import {context} from '@actions/github'
-import filesize from 'filesize'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
-declare class Versions {
-  rustc: string
-  toolchain: string
-  bloat: string
-}
-
-declare class SnapshotDifference {
-  sizeDifference: number
-}
-//
-// function compareSnapshots(current, master): SnapshotDifference {
-//
-// }
-
-async function captureOutput(
-  cmd: string,
-  args: Array<string>
-): Promise<string> {
-  let stdout = ''
-
-  const options: ExecOptions = {}
-  options.listeners = {
-    stdout: (data: Buffer) => {
-      stdout += data.toString()
-    }
-  }
-  await exec.exec(cmd, args, options)
-  return stdout
-}
-
 async function run(): Promise<void> {
-  const token = core.getInput('token')
   if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
     core.setFailed(
       `This can only be used with the following events: ${ALLOWED_EVENTS.join(
@@ -51,129 +28,60 @@ async function run(): Promise<void> {
     return
   }
 
-  const cargo: string = await io.which('cargo', true)
   await core.group('Installing cargo-bloat', async () => {
-    const args = ['install', 'cargo-bloat']
-    await exec.exec(cargo, args)
+    await installCargoBloat()
   })
-  const cargoOutput = await core.group('Running cargo-bloat', async () => {
-    const args = [
-      'bloat',
-      '--release',
-      '--message-format=json',
-      '--all-features',
-      '--crates',
-      '-n',
-      '0'
-    ]
-    return await captureOutput(cargo, args)
-  })
-  const bloatData = JSON.parse(cargoOutput)
 
   const versions = await core.group(
     'Toolchain info',
     async (): Promise<Versions> => {
-      const toolchain_out = await captureOutput('rustup', [
-        'show',
-        'active-toolchain'
-      ])
-      const toolchain = toolchain_out.split(' ')[0]
+      return getToolchainVersions()
+    }
+  )
 
-      const rustc_version_out = await captureOutput('rustc', ['--version'])
-      const rustc = rustc_version_out.split(' ')[1]
-
-      const bloat = (
-        await captureOutput('cargo', ['bloat', '--version'])
-      ).trim()
-
-      core.debug(
-        `Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`
-      )
-
-      return {toolchain, bloat, rustc}
+  const bloatData = await core.group(
+    'Running cargo-bloat',
+    async (): Promise<BloatOutput> => {
+      return await runCargoBloat()
     }
   )
 
   const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`
 
+  const currentSnapshot: Snapshot = {
+    commit: github.context.sha,
+    crates: bloatData.crates,
+    file_size: bloatData['file-size'],
+    text_section_size: bloatData['text-section-size'],
+    toolchain: versions.toolchain,
+    rustc: versions.rustc,
+    bloat: versions.bloat
+  }
+
   if (github.context.eventName == 'push') {
     // Record the results
-    await core.group('Recording', async () => {
-      const data = {
-        repo: repo_path,
-        commit: github.context.sha,
-        crates: bloatData.crates,
-        'file-size': bloatData['file-size'],
-        'text-section-size': bloatData['text-section-size'],
-        toolchain: versions.toolchain,
-        rustc: versions.rustc,
-        bloat: versions.bloat
-      }
-      core.info(`Post data: ${JSON.stringify(data, undefined, 2)}`)
-      const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`
-      await axios.post(url, data)
+    return await core.group('Recording', async () => {
+      return await recordSnapshot(repo_path, currentSnapshot)
     })
-    return
   }
 
   // A merge request
-  const lastBuildData = await core.group('Fetching last build', async () => {
-    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch?repo=${repo_path}`
-    const res = await axios.get(url)
-    core.info(`Response: ${JSON.stringify(res.data)}`)
-  })
-
-  const graphqlWithAuth = graphql.defaults({
-    headers: {
-      authorization: `bearer ${token}`
-    }
-  })
-  console.log(`Number: ${github.context.issue.number}`)
-
-  const thing = await graphqlWithAuth(
-    `
-  query issueComments($owner: String!, $repo: String!, $pr: Int!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequest(number: $pr) {
-        id,
-        comments(first: 100) {
-          nodes {
-            viewerDidAuthor,
-            body
-          }
-        }
-      }
-    }
-  }
-  `,
-    {
-      owner: context.issue.owner,
-      repo: context.issue.repo,
-      pr: context.issue.number
+  const masterSnapshot = await core.group(
+    'Fetching last build',
+    async (): Promise<Snapshot> => {
+      return await fetchSnapshot(repo_path)
     }
   )
-
-  core.info(`Response: ${JSON.stringify(thing)}`)
-
-  const pullRequestId = thing?.repository.pullRequest.id
-
-  core.info(`Response: ${JSON.stringify(pullRequestId)}`)
-
-  await graphqlWithAuth(
-    `
-
-    mutation addComment($body: String!, $id: ID!) {
-      addComment(input: {
-        body: $body,
-        subjectId: $id,
-      }) {
-        clientMutationId
-      }
-    }
-  `,
-    {
-      body: 'test comment',
-      id: pullRequestId
+  context.issue.number
+  await core.group(
+    'Posting comment',
+    async (): Promise<void> => {
+      const snapshotDiff = compareSnapshots(currentSnapshot, masterSnapshot)
+      core.debug(`snapshot: ${JSON.stringify(snapshotDiff, undefined, 2)}`)
+      await createOrUpdateComment(
+        versions.toolchain,
+        createSnapshotComment(versions.toolchain, snapshotDiff)
+      )
     }
   )
 }

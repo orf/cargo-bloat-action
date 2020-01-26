@@ -30,9 +30,12 @@
     "@actions/exec": "^1.0.3",
     "@actions/github": "^2.1.0",
     "@actions/io": "^1.0.2",
-    "@octokit/graphql": "^4.3.1",
+    "@types/handlebars-helpers": "^0.5.2",
+    "@types/text-table": "^0.2.1",
     "axios": "^0.19.2",
-    "filesize": "^6.0.1"
+    "filesize": "^6.0.1",
+    "lodash.sortby": "^4.7.0",
+    "text-table": "^0.2.0"
   },
   "devDependencies": {
     "@types/jest": "^24.9.1",
