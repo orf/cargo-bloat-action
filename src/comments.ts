@@ -72,14 +72,18 @@ export function createSnapshotComment(
 ): string {
   const crateTableRows: Array<[string, string]> = []
   diff.crateDifference.forEach(d => {
-    if (d.old === d.new) {
+    if (d.old === null && d.new === null) {
       return
     }
-    if (d.old) {
-      crateTableRows.push([`- ${d.name}`, fileSize(d.old)])
-    }
-    if (d.new) {
-      crateTableRows.push([`+ ${d.name}`, fileSize(d.new)])
+    if (d.old === d.new) {
+      crateTableRows.push([`- ${d.name}`, fileSize(d.new as number)])
+    } else {
+      if (d.old) {
+        crateTableRows.push([`- ${d.name}`, fileSize(d.old)])
+      }
+      if (d.new) {
+        crateTableRows.push([`+ ${d.name}`, fileSize(d.new)])
+      }
     }
   })
 

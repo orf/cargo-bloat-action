@@ -9124,14 +9124,19 @@ exports.createOrUpdateComment = createOrUpdateComment;
 function createSnapshotComment(toolchain, diff) {
     const crateTableRows = [];
     diff.crateDifference.forEach(d => {
-        if (d.old === d.new) {
+        if (d.old === null && d.new === null) {
             return;
         }
-        if (d.old) {
-            crateTableRows.push([`- ${d.name}`, filesize_1.default(d.old)]);
+        if (d.old === d.new) {
+            crateTableRows.push([`- ${d.name}`, filesize_1.default(d.new)]);
         }
-        if (d.new) {
-            crateTableRows.push([`+ ${d.name}`, filesize_1.default(d.new)]);
+        else {
+            if (d.old) {
+                crateTableRows.push([`- ${d.name}`, filesize_1.default(d.old)]);
+            }
+            if (d.new) {
+                crateTableRows.push([`+ ${d.name}`, filesize_1.default(d.new)]);
+            }
         }
     });
     const sizeTableRows = [];
