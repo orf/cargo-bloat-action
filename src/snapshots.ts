@@ -1,5 +1,6 @@
 import axios from 'axios'
 import * as core from '@actions/core'
+import {context} from '@actions/github'
 
 declare interface CrateDifference {
   name: string
@@ -18,6 +19,9 @@ export declare interface SnapshotDifference {
   currentTextSize: number
   oldTextSize: number
   textDifference: number
+
+  masterCommit: string | null
+  currentCommit: string
 
   crateDifference: Array<CrateDifference>
 }
@@ -93,7 +97,9 @@ export function compareSnapshots(
     currentSize,
     oldSize,
     currentTextSize,
-    oldTextSize
+    oldTextSize,
+    masterCommit: master?.commit || null,
+    currentCommit: context.sha
   }
 }
 
