@@ -129,6 +129,23 @@ export function createSnapshotComment(
     }
   }
 
+  const crateDetailsText =
+    crateTableRows.length == 0
+      ? 'No changes to crate sizes'
+      : `
+<details>
+<summary>Size difference per crate</summary>
+<br />
+
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
+
+\`\`\`diff
+@@ Breakdown per crate @@
+${crateTable}
+\`\`\`
+
+</details>`
+
   return `
 :${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
 
@@ -139,18 +156,6 @@ ${sizeTable}
 
 \`\`\`
 
-<details>
-<summary>Size difference per crate</summary>
-<br />
-
-**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
-
-\`\`\`diff
-@@ Breakdown per crate @@
-
-${crateTable}
-\`\`\`
-
-</details>
+${crateDetailsText}
 `
 }

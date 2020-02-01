@@ -9175,6 +9175,21 @@ function createSnapshotComment(toolchain, diff) {
             break;
         }
     }
+    const crateDetailsText = crateTableRows.length == 0
+        ? 'No changes to crate sizes'
+        : `
+<details>
+<summary>Size difference per crate</summary>
+<br />
+
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
+
+\`\`\`diff
+@@ Breakdown per crate @@
+${crateTable}
+\`\`\`
+
+</details>`;
     return `
 :${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
 
@@ -9185,19 +9200,7 @@ ${sizeTable}
 
 \`\`\`
 
-<details>
-<summary>Size difference per crate</summary>
-<br />
-
-**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
-
-\`\`\`diff
-@@ Breakdown per crate @@
-
-${crateTable}
-\`\`\`
-
-</details>
+${crateDetailsText}
 `;
 }
 exports.createSnapshotComment = createSnapshotComment;
@@ -13315,10 +13318,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(__webpack_require__(53));
 const core = __importStar(__webpack_require__(470));
+const github_1 = __webpack_require__(469);
 function compareSnapshots(current, master) {
-    var _a, _b, _c;
-    const masterFileSize = (((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0);
-    const masterTextSize = (((_b = master) === null || _b === void 0 ? void 0 : _b.text_section_size) || 0);
+    var _a, _b, _c, _d;
+    const masterFileSize = ((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0;
+    const masterTextSize = ((_b = master) === null || _b === void 0 ? void 0 : _b.text_section_size) || 0;
     const sizeDifference = current.file_size - masterFileSize;
     const textDifference = current.text_section_size - masterTextSize;
     const currentCratesObj = {};
@@ -13326,7 +13330,7 @@ function compareSnapshots(current, master) {
         currentCratesObj[o.name] = o.size;
     }
     const masterCratesObj = {};
-    for (const o of (((_c = master) === null || _c === void 0 ? void 0 : _c.crates) || [])) {
+    for (const o of ((_c = master) === null || _c === void 0 ? void 0 : _c.crates) || []) {
         masterCratesObj[o.name] = o.size;
     }
     // Ignore unknown crates for now.
@@ -13361,7 +13365,9 @@ function compareSnapshots(current, master) {
         currentSize,
         oldSize,
         currentTextSize,
-        oldTextSize
+        oldTextSize,
+        masterCommit: ((_d = master) === null || _d === void 0 ? void 0 : _d.commit) || null,
+        currentCommit: github_1.context.sha
     };
 }
 exports.compareSnapshots = compareSnapshots;
