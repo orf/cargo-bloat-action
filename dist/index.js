@@ -9175,6 +9175,7 @@ function createSnapshotComment(toolchain, diff) {
             break;
         }
     }
+    const compareCommitText = diff.masterCommit == null ? "" : `([Compare with master](https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/compare/${diff.masterCommit}...${diff.currentCommit}))`;
     const crateDetailsText = crateTableRows.length == 0
         ? 'No changes to crate sizes'
         : `
@@ -9201,6 +9202,8 @@ ${sizeTable}
 \`\`\`
 
 ${crateDetailsText}
+
+Commit: ${diff.currentCommit} ${compareCommitText}
 `;
 }
 exports.createSnapshotComment = createSnapshotComment;
