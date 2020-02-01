@@ -68,11 +68,10 @@ async function run(): Promise<void> {
   // A merge request
   const masterSnapshot = await core.group(
     'Fetching last build',
-    async (): Promise<Snapshot> => {
+    async (): Promise<Snapshot | null> => {
       return await fetchSnapshot(repo_path, versions.toolchain)
     }
   )
-  context.issue.number
   await core.group(
     'Posting comment',
     async (): Promise<void> => {
