@@ -9175,7 +9175,9 @@ function createSnapshotComment(toolchain, diff) {
             break;
         }
     }
-    const detailsText = `
+    const crateDetailsText = crateTableRows.length == 0
+        ? 'No changes to crate sizes'
+        : `
 <details>
 <summary>Size difference per crate</summary>
 <br />
@@ -9198,7 +9200,7 @@ ${sizeTable}
 
 \`\`\`
 
-${detailsText}
+${crateDetailsText}
 `;
 }
 exports.createSnapshotComment = createSnapshotComment;
@@ -13364,7 +13366,7 @@ function compareSnapshots(current, master) {
         oldSize,
         currentTextSize,
         oldTextSize,
-        masterCommit: (((_d = master) === null || _d === void 0 ? void 0 : _d.commit) || null),
+        masterCommit: ((_d = master) === null || _d === void 0 ? void 0 : _d.commit) || null,
         currentCommit: github_1.context.sha
     };
 }

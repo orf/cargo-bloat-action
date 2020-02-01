@@ -129,7 +129,10 @@ export function createSnapshotComment(
     }
   }
 
-  const detailsText = `
+  const crateDetailsText =
+    crateTableRows.length == 0
+      ? 'No changes to crate sizes'
+      : `
 <details>
 <summary>Size difference per crate</summary>
 <br />
@@ -153,6 +156,6 @@ ${sizeTable}
 
 \`\`\`
 
-${detailsText}
+${crateDetailsText}
 `
 }
