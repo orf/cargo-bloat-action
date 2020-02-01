@@ -4587,7 +4587,6 @@ const github = __importStar(__webpack_require__(469));
 const snapshots_1 = __webpack_require__(775);
 const bloat_1 = __webpack_require__(220);
 const comments_1 = __webpack_require__(406);
-const github_1 = __webpack_require__(469);
 const ALLOWED_EVENTS = ['pull_request', 'push'];
 async function run() {
     if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
@@ -4623,7 +4622,6 @@ async function run() {
     const masterSnapshot = await core.group('Fetching last build', async () => {
         return await snapshots_1.fetchSnapshot(repo_path, versions.toolchain);
     });
-    github_1.context.issue.number;
     await core.group('Posting comment', async () => {
         const snapshotDiff = snapshots_1.compareSnapshots(currentSnapshot, masterSnapshot);
         core.debug(`snapshot: ${JSON.stringify(snapshotDiff, undefined, 2)}`);
@@ -13318,14 +13316,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(__webpack_require__(53));
 const core = __importStar(__webpack_require__(470));
 function compareSnapshots(current, master) {
-    const sizeDifference = current.file_size - master.file_size;
-    const textDifference = current.text_section_size - master.text_section_size;
+    var _a, _b, _c;
+    const masterFileSize = (((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0);
+    const masterTextSize = (((_b = master) === null || _b === void 0 ? void 0 : _b.text_section_size) || 0);
+    const sizeDifference = current.file_size - masterFileSize;
+    const textDifference = current.text_section_size - masterTextSize;
     const currentCratesObj = {};
     for (const o of current.crates) {
         currentCratesObj[o.name] = o.size;
     }
     const masterCratesObj = {};
-    for (const o of master.crates) {
+    for (const o of (((_c = master) === null || _c === void 0 ? void 0 : _c.crates) || [])) {
         masterCratesObj[o.name] = o.size;
     }
     // Ignore unknown crates for now.
@@ -13351,8 +13352,8 @@ function compareSnapshots(current, master) {
     }
     const currentSize = current.file_size;
     const currentTextSize = current.text_section_size;
-    const oldSize = master.file_size;
-    const oldTextSize = master.text_section_size;
+    const oldSize = masterFileSize;
+    const oldTextSize = masterTextSize;
     return {
         sizeDifference,
         textDifference,
@@ -13368,6 +13369,10 @@ async function fetchSnapshot(repo, toolchain) {
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`;
     const res = await axios_1.default.get(url, { params: { repo, toolchain } });
     core.info(`Response: ${JSON.stringify(res.data)}`);
+    // This is a bit screwed.
+    if (Object.keys(res.data).length == 0) {
+        return null;
+    }
     return res.data;
 }
 exports.fetchSnapshot = fetchSnapshot;

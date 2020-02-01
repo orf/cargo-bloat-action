@@ -39,17 +39,20 @@ export declare interface Snapshot {
 
 export function compareSnapshots(
   current: Snapshot,
-  master: Snapshot
+  master: Snapshot | null
 ): SnapshotDifference {
-  const sizeDifference = current.file_size - master.file_size
-  const textDifference = current.text_section_size - master.text_section_size
+  const masterFileSize = master?.file_size || 0
+  const masterTextSize = master?.text_section_size || 0
+
+  const sizeDifference = current.file_size - masterFileSize
+  const textDifference = current.text_section_size - masterTextSize
 
   const currentCratesObj: {[key: string]: number} = {}
   for (const o of current.crates) {
     currentCratesObj[o.name] = o.size
   }
   const masterCratesObj: {[key: string]: number} = {}
-  for (const o of master.crates) {
+  for (const o of master?.crates || []) {
     masterCratesObj[o.name] = o.size
   }
 
@@ -80,8 +83,8 @@ export function compareSnapshots(
   const currentSize = current.file_size
   const currentTextSize = current.text_section_size
 
-  const oldSize = master.file_size
-  const oldTextSize = master.text_section_size
+  const oldSize = masterFileSize
+  const oldTextSize = masterTextSize
 
   return {
     sizeDifference,
@@ -97,10 +100,14 @@ export function compareSnapshots(
 export async function fetchSnapshot(
   repo: string,
   toolchain: string
-): Promise<Snapshot> {
+): Promise<Snapshot | null> {
   const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
   const res = await axios.get(url, {params: {repo, toolchain}})
   core.info(`Response: ${JSON.stringify(res.data)}`)
+  // This is a bit screwed.
+  if (Object.keys(res.data).length == 0) {
+    return null
+  }
   return res.data as Snapshot
 }
 
