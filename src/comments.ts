@@ -132,7 +132,7 @@ export function createSnapshotComment(
   const compareCommitText =
     diff.masterCommit == null
       ? ''
-      : `([Compare with master](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`
+      : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`
 
   const crateDetailsText =
     crateTableRows.length == 0
