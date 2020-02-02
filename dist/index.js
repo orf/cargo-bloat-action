@@ -9175,7 +9175,9 @@ function createSnapshotComment(toolchain, diff) {
             break;
         }
     }
-    const compareCommitText = diff.masterCommit == null ? "" : `([Compare with master](https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/compare/${diff.masterCommit}...${diff.currentCommit}))`;
+    const compareCommitText = diff.masterCommit == null
+        ? ''
+        : `([Compare with baseline commit](https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`;
     const crateDetailsText = crateTableRows.length == 0
         ? 'No changes to crate sizes'
         : `
@@ -13322,6 +13324,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(__webpack_require__(53));
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
+function sizesAreDifferent(newValue, oldValue) {
+    if (oldValue == null) {
+        return true;
+    }
+    const numberDiff = newValue - oldValue;
+    const fourKb = 4000;
+    // If the size difference is between 4kb either way, don't record the difference.
+    if (numberDiff > -fourKb && numberDiff < fourKb) {
+        return false;
+    }
+    return newValue != oldValue;
+}
 function compareSnapshots(current, master) {
     var _a, _b, _c, _d;
     const masterFileSize = ((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0;
@@ -13349,7 +13363,7 @@ function compareSnapshots(current, master) {
         else {
             delete masterCratesObj[name];
         }
-        if (newValue != oldValue) {
+        if (sizesAreDifferent(newValue, oldValue)) {
             crateDifference.push({ name, new: newValue, old: oldValue });
         }
     }
@@ -13375,6 +13389,7 @@ function compareSnapshots(current, master) {
 }
 exports.compareSnapshots = compareSnapshots;
 async function fetchSnapshot(repo, toolchain) {
+    // Don't be a dick, please.
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`;
     const res = await axios_1.default.get(url, { params: { repo, toolchain } });
     core.info(`Response: ${JSON.stringify(res.data)}`);
@@ -13386,8 +13401,9 @@ async function fetchSnapshot(repo, toolchain) {
 }
 exports.fetchSnapshot = fetchSnapshot;
 async function recordSnapshot(repo, snapshot) {
-    core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`);
+    // Don't be a dick, please.
     const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`;
+    core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`);
     await axios_1.default.post(url, snapshot, { params: { repo } });
 }
 exports.recordSnapshot = recordSnapshot;

@@ -41,6 +41,21 @@ export declare interface Snapshot {
   crates: Array<Crate>
 }
 
+function sizesAreDifferent(newValue: number, oldValue: number | null): boolean {
+  if (oldValue == null) {
+    return true
+  }
+  const numberDiff = newValue - oldValue
+  const fourKb = 4000
+
+  // If the size difference is between 4kb either way, don't record the difference.
+  if (numberDiff > -fourKb && numberDiff < fourKb) {
+    return false
+  }
+
+  return newValue != oldValue
+}
+
 export function compareSnapshots(
   current: Snapshot,
   master: Snapshot | null
@@ -74,7 +89,7 @@ export function compareSnapshots(
     } else {
       delete masterCratesObj[name]
     }
-    if (newValue != oldValue) {
+    if (sizesAreDifferent(newValue, oldValue)) {
       crateDifference.push({name, new: newValue, old: oldValue})
     }
   }
@@ -107,6 +122,7 @@ export async function fetchSnapshot(
   repo: string,
   toolchain: string
 ): Promise<Snapshot | null> {
+  // Don't be a dick, please.
   const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
   const res = await axios.get(url, {params: {repo, toolchain}})
   core.info(`Response: ${JSON.stringify(res.data)}`)
@@ -121,7 +137,8 @@ export async function recordSnapshot(
   repo: string,
   snapshot: Snapshot
 ): Promise<void> {
-  core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`)
+  // Don't be a dick, please.
   const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`
+  core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`)
   await axios.post(url, snapshot, {params: {repo}})
 }

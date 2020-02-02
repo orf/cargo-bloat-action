@@ -14,7 +14,6 @@ import {
   Versions
 } from './bloat'
 import {createOrUpdateComment, createSnapshotComment} from './comments'
-import {context} from '@actions/github'
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
