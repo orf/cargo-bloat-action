@@ -38,7 +38,7 @@ export async function createOrUpdateComment(
   toolchain: string,
   message: string
 ): Promise<void> {
-  console.log(`Find comments for issue: ${github.context.issue.number}`)
+  core.info(`Find comments for issue: ${github.context.issue.number}`)
   const client = githubClient()
 
   const comments = await client.issues.listComments({
@@ -53,16 +53,23 @@ export async function createOrUpdateComment(
       `Error fetching comments for MR ${github.context.issue.number}`
     )
   }
+  core.info(
+    `Found ${comments.data.length} comments. Searching for comments containing ${toolchain}`
+  )
+
   const ourComments = comments.data.filter(v => {
     // Is there a better way to do this?
     return v.user.login == 'github-actions[bot]' && v.body.includes(toolchain)
   })
 
   if (!ourComments.length) {
+    core.info('No existing comment found, creating a new comment')
     await postNewComment(message)
   } else {
     // Update the first comment
-    await updateComment(message, ourComments[0].id)
+    const id = ourComments[0].id
+    core.info(`Updating comment with ID ${id}`)
+    await updateComment(message, id)
   }
 }
 
@@ -143,9 +150,11 @@ export function createSnapshotComment(
 <br />
 
 **Note:** The numbers below are not 100% accurate, use them as a rough estimate.
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
 
 \`\`\`diff
 @@ Breakdown per crate @@
+
 ${crateTable}
 \`\`\`
 
