@@ -150,7 +150,6 @@ export function createSnapshotComment(
 <br />
 
 **Note:** The numbers below are not 100% accurate, use them as a rough estimate.
-**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
 
 \`\`\`diff
 @@ Breakdown per crate @@
