@@ -13324,14 +13324,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(__webpack_require__(53));
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
-function sizesAreDifferent(newValue, oldValue) {
+function shouldIncludeCrateInDiff(newValue, oldValue) {
+    const changedThreshold = 4000;
+    const newThreshold = 350;
     if (oldValue == null) {
-        return true;
+        // If we are adding a new crate that adds less than 350 bytes of bloat, ignore it.
+        return newValue > newThreshold;
     }
     const numberDiff = newValue - oldValue;
-    const fourKb = 4000;
     // If the size difference is between 4kb either way, don't record the difference.
-    if (numberDiff > -fourKb && numberDiff < fourKb) {
+    if (numberDiff > -changedThreshold && numberDiff < changedThreshold) {
         return false;
     }
     return newValue != oldValue;
@@ -13363,7 +13365,7 @@ function compareSnapshots(current, master) {
         else {
             delete masterCratesObj[name];
         }
-        if (sizesAreDifferent(newValue, oldValue)) {
+        if (shouldIncludeCrateInDiff(newValue, oldValue)) {
             crateDifference.push({ name, new: newValue, old: oldValue });
         }
     }
