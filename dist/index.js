@@ -34,8 +34,10 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(198);
+/******/ 		return __webpack_require__(556);
 /******/ 	};
+/******/ 	// initialize runtime
+/******/ 	runtime(__webpack_require__);
 /******/
 /******/ 	// run startup
 /******/ 	return startup();
@@ -4569,78 +4571,6 @@ function checkMode (stat, options) {
 
 /***/ }),
 
-/***/ 198:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const github = __importStar(__webpack_require__(469));
-const snapshots_1 = __webpack_require__(775);
-const bloat_1 = __webpack_require__(220);
-const comments_1 = __webpack_require__(406);
-const ALLOWED_EVENTS = ['pull_request', 'push'];
-async function run() {
-    if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
-        core.setFailed(`This can only be used with the following events: ${ALLOWED_EVENTS.join(', ')}`);
-        return;
-    }
-    await core.group('Installing cargo-bloat', async () => {
-        await bloat_1.installCargoBloat();
-    });
-    const versions = await core.group('Toolchain info', async () => {
-        return bloat_1.getToolchainVersions();
-    });
-    const bloatData = await core.group('Running cargo-bloat', async () => {
-        return await bloat_1.runCargoBloat();
-    });
-    const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`;
-    const currentSnapshot = {
-        commit: github.context.sha,
-        crates: bloatData.crates,
-        file_size: bloatData['file-size'],
-        text_section_size: bloatData['text-section-size'],
-        toolchain: versions.toolchain,
-        rustc: versions.rustc,
-        bloat: versions.bloat
-    };
-    if (github.context.eventName == 'push') {
-        // Record the results
-        return await core.group('Recording', async () => {
-            return await snapshots_1.recordSnapshot(repo_path, currentSnapshot);
-        });
-    }
-    // A merge request
-    const masterSnapshot = await core.group('Fetching last build', async () => {
-        return await snapshots_1.fetchSnapshot(repo_path, versions.toolchain);
-    });
-    await core.group('Posting comment', async () => {
-        const snapshotDiff = snapshots_1.compareSnapshots(currentSnapshot, masterSnapshot);
-        core.debug(`snapshot: ${JSON.stringify(snapshotDiff, undefined, 2)}`);
-        await comments_1.createOrUpdateComment(versions.toolchain, comments_1.createSnapshotComment(versions.toolchain, snapshotDiff));
-    });
-}
-async function main() {
-    try {
-        await run();
-    }
-    catch (error) {
-        core.setFailed(error.message);
-    }
-}
-main();
-
-
-/***/ }),
-
 /***/ 211:
 /***/ (function(module) {
 
@@ -4839,71 +4769,6 @@ module.exports = function xhrAdapter(config) {
     request.send(requestData);
   });
 };
-
-
-/***/ }),
-
-/***/ 220:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const exec = __importStar(__webpack_require__(986));
-const core = __importStar(__webpack_require__(470));
-const io = __importStar(__webpack_require__(1));
-async function captureOutput(cmd, args) {
-    let stdout = '';
-    const options = {};
-    options.listeners = {
-        stdout: (data) => {
-            stdout += data.toString();
-        }
-    };
-    await exec.exec(cmd, args, options);
-    return stdout;
-}
-async function getToolchainVersions() {
-    const toolchain_out = await captureOutput('rustup', [
-        'show',
-        'active-toolchain'
-    ]);
-    const toolchain = toolchain_out.split(' ')[0];
-    const rustc_version_out = await captureOutput('rustc', ['--version']);
-    const rustc = rustc_version_out.split(' ')[1];
-    const bloat = (await captureOutput('cargo', ['bloat', '--version'])).trim();
-    core.debug(`Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`);
-    return { toolchain, bloat, rustc };
-}
-exports.getToolchainVersions = getToolchainVersions;
-async function installCargoBloat() {
-    const cargo = await io.which('cargo', true);
-    const args = ['install', 'cargo-bloat', '--debug'];
-    await exec.exec(cargo, args);
-}
-exports.installCargoBloat = installCargoBloat;
-async function runCargoBloat() {
-    const cargo = await io.which('cargo', true);
-    const args = [
-        'bloat',
-        '--release',
-        '--message-format=json',
-        '--all-features',
-        '--crates',
-        '-n',
-        '0'
-    ];
-    const output = await captureOutput(cargo, args);
-    return JSON.parse(output);
-}
-exports.runCargoBloat = runCargoBloat;
 
 
 /***/ }),
@@ -9050,169 +8915,6 @@ function Octokit(plugins, options) {
 
 /***/ }),
 
-/***/ 406:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const github = __importStar(__webpack_require__(469));
-const github_1 = __webpack_require__(469);
-const core = __importStar(__webpack_require__(470));
-const filesize_1 = __importDefault(__webpack_require__(381));
-const text_table_1 = __importDefault(__webpack_require__(315));
-function githubClient() {
-    const token = core.getInput('token');
-    return new github.GitHub(token);
-}
-exports.githubClient = githubClient;
-async function postNewComment(message) {
-    const client = githubClient();
-    await client.issues.createComment({
-        body: message,
-        issue_number: github_1.context.issue.number,
-        owner: github_1.context.issue.owner,
-        repo: github_1.context.issue.repo
-    });
-}
-async function updateComment(message, comment_id) {
-    const client = githubClient();
-    await client.issues.updateComment({
-        body: message,
-        comment_id,
-        owner: github_1.context.issue.owner,
-        repo: github_1.context.issue.repo
-    });
-}
-async function createOrUpdateComment(toolchain, message) {
-    console.log(`Find comments for issue: ${github.context.issue.number}`);
-    const client = githubClient();
-    const comments = await client.issues.listComments({
-        owner: github_1.context.issue.owner,
-        repo: github_1.context.issue.repo,
-        issue_number: github_1.context.issue.number,
-        per_page: 100
-    });
-    if (comments.status != 200) {
-        return core.setFailed(`Error fetching comments for MR ${github.context.issue.number}`);
-    }
-    const ourComments = comments.data.filter(v => {
-        // Is there a better way to do this?
-        return v.user.login == 'github-actions[bot]' && v.body.includes(toolchain);
-    });
-    if (!ourComments.length) {
-        await postNewComment(message);
-    }
-    else {
-        // Update the first comment
-        await updateComment(message, ourComments[0].id);
-    }
-}
-exports.createOrUpdateComment = createOrUpdateComment;
-function createSnapshotComment(toolchain, diff) {
-    const crateTableRows = [];
-    diff.crateDifference.forEach(d => {
-        if (d.old === null && d.new === null) {
-            return;
-        }
-        if (d.old === d.new) {
-            crateTableRows.push([`${d.name}`, filesize_1.default(d.new)]);
-        }
-        else {
-            if (d.old) {
-                crateTableRows.push([`- ${d.name}`, filesize_1.default(d.old)]);
-            }
-            if (d.new) {
-                crateTableRows.push([`+ ${d.name}`, filesize_1.default(d.new)]);
-            }
-        }
-    });
-    const sizeTableRows = [];
-    if (diff.sizeDifference) {
-        sizeTableRows.push(['- Size', filesize_1.default(diff.oldSize), '']);
-        sizeTableRows.push([
-            '+ Size',
-            `${filesize_1.default(diff.currentSize)}`,
-            `${diff.sizeDifference > 0 ? '+' : ''}${filesize_1.default(diff.sizeDifference)}`
-        ]);
-    }
-    else {
-        sizeTableRows.push(['Size', filesize_1.default(diff.currentTextSize), '']);
-    }
-    if (diff.textDifference) {
-        sizeTableRows.push(['- Text Size', filesize_1.default(diff.oldTextSize), '']);
-        sizeTableRows.push([
-            '+ Text Size',
-            `${filesize_1.default(diff.currentTextSize)}`,
-            `${diff.textDifference > 0 ? '+' : ''}${filesize_1.default(diff.textDifference)}`
-        ]);
-    }
-    else {
-        sizeTableRows.push(['Text size', filesize_1.default(diff.currentTextSize), '']);
-    }
-    const crateTable = text_table_1.default(crateTableRows);
-    const sizeTable = text_table_1.default(sizeTableRows);
-    const emojiList = {
-        apple: 'apple',
-        windows: 'office',
-        arm: 'muscle',
-        linux: 'cowboy_hat_face' // Why not?
-    };
-    let selectedEmoji = 'crab';
-    for (const [key, emoji] of Object.entries(emojiList)) {
-        if (toolchain.includes(key)) {
-            selectedEmoji = emoji;
-            break;
-        }
-    }
-    const compareCommitText = diff.masterCommit == null
-        ? ''
-        : `([Compare with baseline commit](https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`;
-    const crateDetailsText = crateTableRows.length == 0
-        ? 'No changes to crate sizes'
-        : `
-<details>
-<summary>Size difference per crate</summary>
-<br />
-
-**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
-
-\`\`\`diff
-@@ Breakdown per crate @@
-${crateTable}
-\`\`\`
-
-</details>`;
-    return `
-:${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
-
-\`\`\`diff
-@@ Size breakdown @@
-
-${sizeTable}
-
-\`\`\`
-
-${crateDetailsText}
-
-Commit: ${diff.currentCommit} ${compareCommitText}
-`;
-}
-exports.createSnapshotComment = createSnapshotComment;
-
-
-/***/ }),
-
 /***/ 411:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -10938,6 +10640,378 @@ const getPage = __webpack_require__(265)
 function getNextPage (octokit, link, headers) {
   return getPage(octokit, link, 'next', headers)
 }
+
+
+/***/ }),
+
+/***/ 556:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __webpack_require__(470);
+
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __webpack_require__(469);
+
+// EXTERNAL MODULE: ./node_modules/axios/index.js
+var axios = __webpack_require__(53);
+var axios_default = /*#__PURE__*/__webpack_require__.n(axios);
+
+// CONCATENATED MODULE: ./lib/snapshots.js
+
+
+
+function shouldIncludeCrateInDiff(newValue, oldValue) {
+    const changedThreshold = 4000;
+    const newThreshold = 350;
+    if (oldValue == null) {
+        // If we are adding a new crate that adds less than 350 bytes of bloat, ignore it.
+        return newValue > newThreshold;
+    }
+    const numberDiff = newValue - oldValue;
+    // If the size difference is between 4kb either way, don't record the difference.
+    if (numberDiff > -changedThreshold && numberDiff < changedThreshold) {
+        return false;
+    }
+    return newValue != oldValue;
+}
+function compareSnapshots(current, master) {
+    var _a, _b, _c, _d;
+    const masterFileSize = ((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0;
+    const masterTextSize = ((_b = master) === null || _b === void 0 ? void 0 : _b.text_section_size) || 0;
+    const sizeDifference = current.file_size - masterFileSize;
+    const textDifference = current.text_section_size - masterTextSize;
+    const currentCratesObj = {};
+    for (const o of current.crates) {
+        currentCratesObj[o.name] = o.size;
+    }
+    const masterCratesObj = {};
+    for (const o of ((_c = master) === null || _c === void 0 ? void 0 : _c.crates) || []) {
+        masterCratesObj[o.name] = o.size;
+    }
+    // Ignore unknown crates for now.
+    delete currentCratesObj['[Unknown]'];
+    delete masterCratesObj['[Unknown]'];
+    const crateDifference = [];
+    // Crates with new or altered values
+    for (const [name, newValue] of Object.entries(currentCratesObj)) {
+        let oldValue = masterCratesObj[name] || null;
+        if (oldValue == null) {
+            oldValue = null;
+        }
+        else {
+            delete masterCratesObj[name];
+        }
+        if (shouldIncludeCrateInDiff(newValue, oldValue)) {
+            crateDifference.push({ name, new: newValue, old: oldValue });
+        }
+    }
+    // Crates that have been removed
+    for (const [name, oldValue] of Object.entries(masterCratesObj)) {
+        crateDifference.push({ name, new: null, old: oldValue });
+    }
+    const currentSize = current.file_size;
+    const currentTextSize = current.text_section_size;
+    const oldSize = masterFileSize;
+    const oldTextSize = masterTextSize;
+    return {
+        sizeDifference,
+        textDifference,
+        crateDifference,
+        currentSize,
+        oldSize,
+        currentTextSize,
+        oldTextSize,
+        masterCommit: ((_d = master) === null || _d === void 0 ? void 0 : _d.commit) || null,
+        currentCommit: github.context.sha
+    };
+}
+async function fetchSnapshot(repo, toolchain) {
+    // Don't be a dick, please.
+    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`;
+    const res = await axios_default().get(url, { params: { repo, toolchain } });
+    Object(core.info)(`Response: ${JSON.stringify(res.data)}`);
+    // This is a bit screwed.
+    if (Object.keys(res.data).length == 0) {
+        return null;
+    }
+    return res.data;
+}
+async function recordSnapshot(repo, snapshot) {
+    // Don't be a dick, please.
+    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`;
+    Object(core.info)(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`);
+    await axios_default().post(url, snapshot, { params: { repo } });
+}
+
+// EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
+var exec = __webpack_require__(986);
+
+// EXTERNAL MODULE: ./node_modules/@actions/io/lib/io.js
+var io = __webpack_require__(1);
+
+// CONCATENATED MODULE: ./lib/bloat.js
+
+
+
+async function captureOutput(cmd, args) {
+    let stdout = '';
+    const options = {};
+    options.listeners = {
+        stdout: (data) => {
+            stdout += data.toString();
+        }
+    };
+    await Object(exec.exec)(cmd, args, options);
+    return stdout;
+}
+async function getToolchainVersions() {
+    const toolchain_out = await captureOutput('rustup', [
+        'show',
+        'active-toolchain'
+    ]);
+    const toolchain = toolchain_out.split(' ')[0];
+    const rustc_version_out = await captureOutput('rustc', ['--version']);
+    const rustc = rustc_version_out.split(' ')[1];
+    const bloat = (await captureOutput('cargo', ['bloat', '--version'])).trim();
+    Object(core.debug)(`Toolchain: ${toolchain} with rustc ${rustc} and cargo-bloat ${bloat}`);
+    return { toolchain, bloat, rustc };
+}
+async function installCargoBloat() {
+    const cargo = await Object(io.which)('cargo', true);
+    const args = ['install', 'cargo-bloat', '--debug'];
+    await Object(exec.exec)(cargo, args);
+}
+async function runCargoBloat() {
+    const cargo = await Object(io.which)('cargo', true);
+    const args = [
+        'bloat',
+        '--release',
+        '--message-format=json',
+        '--all-features',
+        '--crates',
+        '-n',
+        '0'
+    ];
+    const output = await captureOutput(cargo, args);
+    return JSON.parse(output);
+}
+
+// EXTERNAL MODULE: ./node_modules/filesize/lib/filesize.js
+var filesize = __webpack_require__(381);
+var filesize_default = /*#__PURE__*/__webpack_require__.n(filesize);
+
+// EXTERNAL MODULE: ./node_modules/text-table/index.js
+var text_table = __webpack_require__(315);
+var text_table_default = /*#__PURE__*/__webpack_require__.n(text_table);
+
+// CONCATENATED MODULE: ./lib/comments.js
+
+
+
+
+
+function githubClient() {
+    const token = Object(core.getInput)('token');
+    return new github.GitHub(token);
+}
+async function postNewComment(message) {
+    const client = githubClient();
+    await client.issues.createComment({
+        body: message,
+        issue_number: github.context.issue.number,
+        owner: github.context.issue.owner,
+        repo: github.context.issue.repo
+    });
+}
+async function updateComment(message, comment_id) {
+    const client = githubClient();
+    await client.issues.updateComment({
+        body: message,
+        comment_id,
+        owner: github.context.issue.owner,
+        repo: github.context.issue.repo
+    });
+}
+async function createOrUpdateComment(toolchain, message) {
+    Object(core.info)(`Find comments for issue: ${github.context.issue.number}`);
+    const client = githubClient();
+    const comments = await client.issues.listComments({
+        owner: github.context.issue.owner,
+        repo: github.context.issue.repo,
+        issue_number: github.context.issue.number,
+        per_page: 100
+    });
+    if (comments.status != 200) {
+        return Object(core.setFailed)(`Error fetching comments for MR ${github.context.issue.number}`);
+    }
+    Object(core.info)(`Found ${comments.data.length} comments. Searching for comments containing ${toolchain}`);
+    const ourComments = comments.data.filter(v => {
+        // Is there a better way to do this?
+        return v.user.login == 'github-actions[bot]' && v.body.includes(toolchain);
+    });
+    if (!ourComments.length) {
+        Object(core.info)('No existing comment found, creating a new comment');
+        await postNewComment(message);
+    }
+    else {
+        // Update the first comment
+        const id = ourComments[0].id;
+        Object(core.info)(`Updating comment with ID ${id}`);
+        await updateComment(message, id);
+    }
+}
+function createSnapshotComment(toolchain, diff) {
+    const crateTableRows = [];
+    diff.crateDifference.forEach(d => {
+        if (d.old === null && d.new === null) {
+            return;
+        }
+        if (d.old === d.new) {
+            crateTableRows.push([`${d.name}`, filesize_default()(d.new)]);
+        }
+        else {
+            if (d.old) {
+                crateTableRows.push([`- ${d.name}`, filesize_default()(d.old)]);
+            }
+            if (d.new) {
+                crateTableRows.push([`+ ${d.name}`, filesize_default()(d.new)]);
+            }
+        }
+    });
+    const sizeTableRows = [];
+    if (diff.sizeDifference) {
+        sizeTableRows.push(['- Size', filesize_default()(diff.oldSize), '']);
+        sizeTableRows.push([
+            '+ Size',
+            `${filesize_default()(diff.currentSize)}`,
+            `${diff.sizeDifference > 0 ? '+' : ''}${filesize_default()(diff.sizeDifference)}`
+        ]);
+    }
+    else {
+        sizeTableRows.push(['Size', filesize_default()(diff.currentTextSize), '']);
+    }
+    if (diff.textDifference) {
+        sizeTableRows.push(['- Text Size', filesize_default()(diff.oldTextSize), '']);
+        sizeTableRows.push([
+            '+ Text Size',
+            `${filesize_default()(diff.currentTextSize)}`,
+            `${diff.textDifference > 0 ? '+' : ''}${filesize_default()(diff.textDifference)}`
+        ]);
+    }
+    else {
+        sizeTableRows.push(['Text size', filesize_default()(diff.currentTextSize), '']);
+    }
+    const crateTable = text_table_default()(crateTableRows);
+    const sizeTable = text_table_default()(sizeTableRows);
+    const emojiList = {
+        apple: 'apple',
+        windows: 'office',
+        arm: 'muscle',
+        linux: 'cowboy_hat_face' // Why not?
+    };
+    let selectedEmoji = 'crab';
+    for (const [key, emoji] of Object.entries(emojiList)) {
+        if (toolchain.includes(key)) {
+            selectedEmoji = emoji;
+            break;
+        }
+    }
+    const compareCommitText = diff.masterCommit == null
+        ? ''
+        : `([Compare with baseline commit](https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`;
+    const crateDetailsText = crateTableRows.length == 0
+        ? 'No changes to crate sizes'
+        : `
+<details>
+<summary>Size difference per crate</summary>
+<br />
+
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
+**Note:** The numbers below are not 100% accurate, use them as a rough estimate.
+
+\`\`\`diff
+@@ Breakdown per crate @@
+
+${crateTable}
+\`\`\`
+
+</details>`;
+    return `
+:${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
+
+\`\`\`diff
+@@ Size breakdown @@
+
+${sizeTable}
+
+\`\`\`
+
+${crateDetailsText}
+
+Commit: ${diff.currentCommit} ${compareCommitText}
+`;
+}
+
+// CONCATENATED MODULE: ./lib/main.js
+
+
+
+
+
+const ALLOWED_EVENTS = ['pull_request', 'push'];
+async function run() {
+    if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
+        Object(core.setFailed)(`This can only be used with the following events: ${ALLOWED_EVENTS.join(', ')}`);
+        return;
+    }
+    await Object(core.group)('Installing cargo-bloat', async () => {
+        await installCargoBloat();
+    });
+    const versions = await Object(core.group)('Toolchain info', async () => {
+        return getToolchainVersions();
+    });
+    const bloatData = await Object(core.group)('Running cargo-bloat', async () => {
+        return await runCargoBloat();
+    });
+    const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`;
+    const currentSnapshot = {
+        commit: github.context.sha,
+        crates: bloatData.crates,
+        file_size: bloatData['file-size'],
+        text_section_size: bloatData['text-section-size'],
+        toolchain: versions.toolchain,
+        rustc: versions.rustc,
+        bloat: versions.bloat
+    };
+    if (github.context.eventName == 'push') {
+        // Record the results
+        return await Object(core.group)('Recording', async () => {
+            return await recordSnapshot(repo_path, currentSnapshot);
+        });
+    }
+    // A merge request
+    const masterSnapshot = await Object(core.group)('Fetching last build', async () => {
+        return await fetchSnapshot(repo_path, versions.toolchain);
+    });
+    await Object(core.group)('Posting comment', async () => {
+        const snapshotDiff = compareSnapshots(currentSnapshot, masterSnapshot);
+        Object(core.debug)(`snapshot: ${JSON.stringify(snapshotDiff, undefined, 2)}`);
+        await createOrUpdateComment(versions.toolchain, createSnapshotComment(versions.toolchain, snapshotDiff));
+    });
+}
+async function main() {
+    try {
+        await run();
+    }
+    catch (error) {
+        Object(core.setFailed)(error.message);
+    }
+}
+main();
 
 
 /***/ }),
@@ -13301,114 +13375,6 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 });
 
 module.exports = defaults;
-
-
-/***/ }),
-
-/***/ 775:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(__webpack_require__(53));
-const core = __importStar(__webpack_require__(470));
-const github_1 = __webpack_require__(469);
-function shouldIncludeCrateInDiff(newValue, oldValue) {
-    const changedThreshold = 4000;
-    const newThreshold = 350;
-    if (oldValue == null) {
-        // If we are adding a new crate that adds less than 350 bytes of bloat, ignore it.
-        return newValue > newThreshold;
-    }
-    const numberDiff = newValue - oldValue;
-    // If the size difference is between 4kb either way, don't record the difference.
-    if (numberDiff > -changedThreshold && numberDiff < changedThreshold) {
-        return false;
-    }
-    return newValue != oldValue;
-}
-function compareSnapshots(current, master) {
-    var _a, _b, _c, _d;
-    const masterFileSize = ((_a = master) === null || _a === void 0 ? void 0 : _a.file_size) || 0;
-    const masterTextSize = ((_b = master) === null || _b === void 0 ? void 0 : _b.text_section_size) || 0;
-    const sizeDifference = current.file_size - masterFileSize;
-    const textDifference = current.text_section_size - masterTextSize;
-    const currentCratesObj = {};
-    for (const o of current.crates) {
-        currentCratesObj[o.name] = o.size;
-    }
-    const masterCratesObj = {};
-    for (const o of ((_c = master) === null || _c === void 0 ? void 0 : _c.crates) || []) {
-        masterCratesObj[o.name] = o.size;
-    }
-    // Ignore unknown crates for now.
-    delete currentCratesObj['[Unknown]'];
-    delete masterCratesObj['[Unknown]'];
-    const crateDifference = [];
-    // Crates with new or altered values
-    for (const [name, newValue] of Object.entries(currentCratesObj)) {
-        let oldValue = masterCratesObj[name] || null;
-        if (oldValue == null) {
-            oldValue = null;
-        }
-        else {
-            delete masterCratesObj[name];
-        }
-        if (shouldIncludeCrateInDiff(newValue, oldValue)) {
-            crateDifference.push({ name, new: newValue, old: oldValue });
-        }
-    }
-    // Crates that have been removed
-    for (const [name, oldValue] of Object.entries(masterCratesObj)) {
-        crateDifference.push({ name, new: null, old: oldValue });
-    }
-    const currentSize = current.file_size;
-    const currentTextSize = current.text_section_size;
-    const oldSize = masterFileSize;
-    const oldTextSize = masterTextSize;
-    return {
-        sizeDifference,
-        textDifference,
-        crateDifference,
-        currentSize,
-        oldSize,
-        currentTextSize,
-        oldTextSize,
-        masterCommit: ((_d = master) === null || _d === void 0 ? void 0 : _d.commit) || null,
-        currentCommit: github_1.context.sha
-    };
-}
-exports.compareSnapshots = compareSnapshots;
-async function fetchSnapshot(repo, toolchain) {
-    // Don't be a dick, please.
-    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`;
-    const res = await axios_1.default.get(url, { params: { repo, toolchain } });
-    core.info(`Response: ${JSON.stringify(res.data)}`);
-    // This is a bit screwed.
-    if (Object.keys(res.data).length == 0) {
-        return null;
-    }
-    return res.data;
-}
-exports.fetchSnapshot = fetchSnapshot;
-async function recordSnapshot(repo, snapshot) {
-    // Don't be a dick, please.
-    const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`;
-    core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`);
-    await axios_1.default.post(url, snapshot, { params: { repo } });
-}
-exports.recordSnapshot = recordSnapshot;
 
 
 /***/ }),
@@ -17198,4 +17164,62 @@ exports.exec = exec;
 
 /***/ })
 
-/******/ });
+/******/ },
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ 	"use strict";
+/******/ 
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getter */
+/******/ 	!function() {
+/******/ 		// define getter function for harmony exports
+/******/ 		var hasOwnProperty = Object.prototype.hasOwnProperty;
+/******/ 		__webpack_require__.d = function(exports, name, getter) {
+/******/ 			if(!hasOwnProperty.call(exports, name)) {
+/******/ 				Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	!function() {
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 			if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 			return ns;
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	!function() {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = function(module) {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				function getDefault() { return module['default']; } :
+/******/ 				function getModuleExports() { return module; };
+/******/ 			__webpack_require__.d(getter, 'a', getter);
+/******/ 			return getter;
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ }
+);
