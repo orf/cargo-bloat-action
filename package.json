@@ -33,7 +33,7 @@
     "@types/handlebars-helpers": "^0.5.2",
     "@types/text-table": "^0.2.1",
     "axios": "^0.19.2",
-    "filesize": "^6.0.1",
+    "filesize": "^6.1.0",
     "lodash.sortby": "^4.7.0",
     "text-table": "^0.2.0"
   },
