@@ -1,7 +1,7 @@
 import * as github from '@actions/github'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
-import {SnapshotDifference} from './snapshots'
+import {shouldIncludeInDiff, SnapshotDifference} from './snapshots'
 import fileSize from 'filesize'
 import table from 'text-table'
 
@@ -95,7 +95,7 @@ export function createSnapshotComment(
   })
 
   const sizeTableRows: Array<[string, string, string]> = []
-  if (diff.sizeDifference) {
+  if (shouldIncludeInDiff(diff.currentSize, diff.oldSize)) {
     sizeTableRows.push(['- Size', fileSize(diff.oldSize), ''])
     sizeTableRows.push([
       '+ Size',
@@ -106,7 +106,7 @@ export function createSnapshotComment(
     sizeTableRows.push(['Size', fileSize(diff.currentTextSize), ''])
   }
 
-  if (diff.textDifference) {
+  if (shouldIncludeInDiff(diff.currentTextSize, diff.oldTextSize)) {
     sizeTableRows.push(['- Text Size', fileSize(diff.oldTextSize), ''])
     sizeTableRows.push([
       '+ Text Size',

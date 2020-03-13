@@ -41,7 +41,7 @@ export declare interface Snapshot {
   crates: Array<Crate>
 }
 
-function shouldIncludeCrateInDiff(
+export function shouldIncludeInDiff(
   newValue: number,
   oldValue: number | null
 ): boolean {
@@ -95,7 +95,7 @@ export function compareSnapshots(
     } else {
       delete masterCratesObj[name]
     }
-    if (shouldIncludeCrateInDiff(newValue, oldValue)) {
+    if (shouldIncludeInDiff(newValue, oldValue)) {
       crateDifference.push({name, new: newValue, old: oldValue})
     }
   }
