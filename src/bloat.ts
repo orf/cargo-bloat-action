@@ -90,7 +90,9 @@ export async function runCargoTree(cargoPath: string, packageName: string): Prom
     '-p',
     packageName
   ]
-  return await captureOutput(cargoPath, args)
+  // The first line has the version and other metadata in it. We strip that here:
+  const lines = (await captureOutput(cargoPath, args)).split("\n")
+  return lines.slice(1).join("\n")
 }
 
 export async function getCargoPackages(cargoPath: string): Promise<CargoMetadata> {
