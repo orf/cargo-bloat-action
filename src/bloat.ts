@@ -19,6 +19,14 @@ export declare interface TreeOutput {
   lines: Array<string>
 }
 
+export declare interface CargoPackage {
+  name: string
+}
+
+export declare interface CargoMetadata {
+  packages: Array<CargoPackage>
+}
+
 async function captureOutput(
   cmd: string,
   args: Array<string>
@@ -74,10 +82,19 @@ export async function runCargoBloat(cargoPath: string): Promise<BloatOutput> {
   return JSON.parse(output)
 }
 
-export async function runCargoTree(cargoPath: string): Promise<string> {
+export async function runCargoTree(cargoPath: string, packageName: string): Promise<string> {
   const args = [
     'tree',
-    '--prefix-depth'
+    '--prefix-depth',
+    '--all-features',
+    '-p',
+    packageName
   ]
   return await captureOutput(cargoPath, args)
+}
+
+export async function getCargoPackages(cargoPath: string): Promise<CargoMetadata> {
+  const args = ['metadata', '--no-deps', '--format-version=1']
+  const output = await captureOutput(cargoPath, args)
+  return JSON.parse(output)
 }

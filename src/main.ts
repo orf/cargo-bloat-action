@@ -7,7 +7,7 @@ import {
   recordSnapshot
 } from './snapshots'
 import {
-  BloatOutput,
+  BloatOutput, CargoMetadata, getCargoPackages,
   getToolchainVersions,
   installCargoDependencies,
   runCargoBloat, runCargoTree, TreeOutput,
@@ -48,12 +48,25 @@ async function run(): Promise<void> {
     }
   )
 
-  const treeData = await core.group(
-    'Running cargo-tree',
-    async (): Promise<string> => {
-      return await runCargoTree(cargoPath)
+  const metadata = await core.group(
+    'Inspecting cargo packages',
+    async (): Promise<CargoMetadata> => {
+      return await getCargoPackages(cargoPath)
     }
   )
+
+  let treeData: string
+
+  if (metadata.packages.length > 1) {
+    treeData = await core.group(
+      'Running cargo-tree',
+      async (): Promise<string> => {
+        return await runCargoTree(cargoPath, metadata.packages[0].name)
+      }
+    )
+  } else {
+    treeData = ""
+  }
 
   const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`
 
