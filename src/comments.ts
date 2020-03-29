@@ -1,9 +1,10 @@
 import * as github from '@actions/github'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
-import {shouldIncludeInDiff, SnapshotDifference} from './snapshots'
+import {SnapshotDifference} from './snapshots'
 import fileSize from 'filesize'
 import table from 'text-table'
+import {shouldIncludeInDiff} from "./utils"
 
 export function githubClient(): github.GitHub {
   const token = core.getInput('token')
