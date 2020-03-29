@@ -1,6 +1,11 @@
 import axios from 'axios'
 import * as core from '@actions/core'
 import {context} from '@actions/github'
+import * as Diff from 'diff'
+import {set} from "lodash"
+import {asTree} from "treeify"
+import {ParsedDiff} from "diff"
+import {Hunk} from "diff"
 
 declare interface CrateDifference {
   name: string
@@ -24,6 +29,8 @@ export declare interface SnapshotDifference {
   currentCommit: string
 
   crateDifference: Array<CrateDifference>
+
+  treeDiff: Hunk[]
 }
 
 export declare interface Crate {
@@ -63,6 +70,45 @@ export function shouldIncludeInDiff(
   return newValue != oldValue
 }
 
+
+function treeToDisplay(tree: string): string {
+  // The syntax looks like this:
+  // 1serde v1.0.104
+  // 2itoa v0.4.5
+  // 1another v1.2.3
+  // And we need to construct a tree object that looks like
+  // {
+  //   'serde: v1.0.104': {
+  //       'iota v0.4.5': null
+  //   },
+  //   'another v1.2.3': null
+  // }
+
+  const treeObject = {}
+  const currentKeyPath: Array<string> = []
+
+  tree.split('\n').forEach(line => {
+    const found = line.match(/^(\d+)(.*)/)
+    if (found == null) {
+      return
+    }
+    const indent = parseInt(found[1], 10) - 1
+    const ourKey = found[2]
+
+    if (indent + 1 > currentKeyPath.length) {
+      currentKeyPath.push(ourKey)
+    } else {
+      while (indent < currentKeyPath.length) {
+        currentKeyPath.pop()
+      }
+      currentKeyPath.push(ourKey)
+    }
+    set(treeObject, currentKeyPath, null)
+  })
+
+  return asTree(treeObject, false, true)
+}
+
 export function compareSnapshots(
   current: Snapshot,
   master: Snapshot | null
@@ -73,11 +119,11 @@ export function compareSnapshots(
   const sizeDifference = current.file_size - masterFileSize
   const textDifference = current.text_section_size - masterTextSize
 
-  const currentCratesObj: {[key: string]: number} = {}
+  const currentCratesObj: { [key: string]: number } = {}
   for (const o of current.crates) {
     currentCratesObj[o.name] = o.size
   }
-  const masterCratesObj: {[key: string]: number} = {}
+  const masterCratesObj: { [key: string]: number } = {}
   for (const o of master?.crates || []) {
     masterCratesObj[o.name] = o.size
   }
@@ -112,6 +158,9 @@ export function compareSnapshots(
   const oldSize = masterFileSize
   const oldTextSize = masterTextSize
 
+  const treeDiff = master?.tree && master.tree !== current.tree ?
+    Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : []
+
   return {
     sizeDifference,
     textDifference,
@@ -121,7 +170,8 @@ export function compareSnapshots(
     currentTextSize,
     oldTextSize,
     masterCommit: master?.commit || null,
-    currentCommit: context.sha
+    currentCommit: context.sha,
+    treeDiff
   }
 }
 

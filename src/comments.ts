@@ -136,6 +136,14 @@ export function createSnapshotComment(
     }
   }
 
+  const treeDiffLines : Array<string> = []
+
+  diff.treeDiff.forEach(hunk => {
+    treeDiffLines.push(...hunk.lines)
+  });
+
+  const treeDiff = treeDiffLines.join('\n') + '\n';
+
   const compareCommitText =
     diff.masterCommit == null
       ? ''
@@ -157,7 +165,26 @@ export function createSnapshotComment(
 ${crateTable}
 \`\`\`
 
-</details>`
+</details>
+`
+
+  const treeDiffText =
+    treeDiff.length == 0
+      ? `No changes to dependency tree`
+      : `
+
+<details>
+<summary>Dependency tree changes</summary>
+<br />
+
+\`\`\`diff
+@@ Dependency tree changes @@
+
+${treeDiff}
+\`\`\`
+
+</details>
+`
 
   return `
 :${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
@@ -170,6 +197,8 @@ ${sizeTable}
 \`\`\`
 
 ${crateDetailsText}
+
+${treeDiffText}
 
 Commit: ${diff.currentCommit} ${compareCommitText}
 `
