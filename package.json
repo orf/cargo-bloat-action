@@ -17,6 +17,9 @@
     "type": "git",
     "url": "git+https://github.com/orf/cargo-bloat-action.git"
   },
+  "pre-commit": [
+    "build-release"
+  ],
   "keywords": [
     "actions",
     "node",
@@ -34,6 +37,7 @@
     "axios": "^0.19.2",
     "filesize": "^6.1.0",
     "lodash.sortby": "^4.7.0",
+    "pre-commit": "^1.2.2",
     "text-table": "^0.2.0"
   },
   "devDependencies": {

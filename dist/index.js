@@ -11170,7 +11170,7 @@ async function run() {
         return await getCargoPackages(cargoPath);
     });
     let treeData;
-    if (metadata.packages.length > 1) {
+    if (metadata.packages.length == 1) {
         const packageName = metadata.packages[0].name;
         treeData = await Object(core.group)(`Running cargo-tree on package ${packageName}`, async () => {
             return await runCargoTree(cargoPath, packageName);
