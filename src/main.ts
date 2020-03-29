@@ -98,7 +98,7 @@ async function run(): Promise<void> {
         const [name, currentPackage] = obj
         return compareSnapshots(name, masterCommit, currentPackage, masterSnapshot?.packages?.[name] || null)
       })
-      core.debug(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`)
+      core.info(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`)
       // await createOrUpdateComment(
       //   versions.toolchain,
       //   createSnapshotComment(versions.toolchain, snapshotDiff)

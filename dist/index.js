@@ -29452,7 +29452,7 @@ async function run() {
             const [name, currentPackage] = obj;
             return compareSnapshots(name, masterCommit, currentPackage, ((_a = masterSnapshot === null || masterSnapshot === void 0 ? void 0 : masterSnapshot.packages) === null || _a === void 0 ? void 0 : _a[name]) || null);
         });
-        Object(core.debug)(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`);
+        Object(core.info)(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`);
         // await createOrUpdateComment(
         //   versions.toolchain,
         //   createSnapshotComment(versions.toolchain, snapshotDiff)
