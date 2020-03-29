@@ -10968,12 +10968,20 @@ async function runCargoBloat(cargoPath) {
     const output = await captureOutput(cargoPath, args);
     return JSON.parse(output);
 }
-async function runCargoTree(cargoPath) {
+async function runCargoTree(cargoPath, packageName) {
     const args = [
         'tree',
-        '--prefix-depth'
+        '--prefix-depth',
+        '--all-features',
+        '-p',
+        packageName
     ];
     return await captureOutput(cargoPath, args);
+}
+async function getCargoPackages(cargoPath) {
+    const args = ['metadata', '--no-deps', '--format-version=1'];
+    const output = await captureOutput(cargoPath, args);
+    return JSON.parse(output);
 }
 
 // EXTERNAL MODULE: ./node_modules/filesize/lib/filesize.js
@@ -11158,9 +11166,19 @@ async function run() {
     const bloatData = await Object(core.group)('Running cargo-bloat', async () => {
         return await runCargoBloat(cargoPath);
     });
-    const treeData = await Object(core.group)('Running cargo-tree', async () => {
-        return await runCargoTree(cargoPath);
+    const metadata = await Object(core.group)('Inspecting cargo packages', async () => {
+        return await getCargoPackages(cargoPath);
     });
+    let treeData;
+    if (metadata.packages.length > 1) {
+        const packageName = metadata.packages[0].name;
+        treeData = await Object(core.group)(`Running cargo-tree on package ${packageName}`, async () => {
+            return await runCargoTree(cargoPath, packageName);
+        });
+    }
+    else {
+        treeData = "";
+    }
     const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`;
     const currentSnapshot = {
         commit: github.context.sha,
