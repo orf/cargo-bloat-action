@@ -9,11 +9,12 @@ import {
 import {
   BloatOutput,
   getToolchainVersions,
-  installCargoBloat,
-  runCargoBloat,
+  installCargoDependencies,
+  runCargoBloat, runCargoTree, TreeOutput,
   Versions
 } from './bloat'
 import {createOrUpdateComment, createSnapshotComment} from './comments'
+import * as io from "@actions/io"
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -27,8 +28,10 @@ async function run(): Promise<void> {
     return
   }
 
-  await core.group('Installing cargo-bloat', async () => {
-    await installCargoBloat()
+  const cargoPath: string = await io.which('cargo', true)
+
+  await core.group('Installing cargo dependencies', async () => {
+    await installCargoDependencies(cargoPath)
   })
 
   const versions = await core.group(
@@ -41,7 +44,14 @@ async function run(): Promise<void> {
   const bloatData = await core.group(
     'Running cargo-bloat',
     async (): Promise<BloatOutput> => {
-      return await runCargoBloat()
+      return await runCargoBloat(cargoPath)
+    }
+  )
+
+  const treeData = await core.group(
+    'Running cargo-tree',
+    async (): Promise<string> => {
+      return await runCargoTree(cargoPath)
     }
   )
 
@@ -54,7 +64,8 @@ async function run(): Promise<void> {
     text_section_size: bloatData['text-section-size'],
     toolchain: versions.toolchain,
     rustc: versions.rustc,
-    bloat: versions.bloat
+    bloat: versions.bloat,
+    tree: treeData,
   }
 
   if (github.context.eventName == 'push') {

@@ -39,6 +39,7 @@ export declare interface Snapshot {
   rustc: string
   bloat: string
   crates: Array<Crate>
+  tree: string
 }
 
 export function shouldIncludeInDiff(
