@@ -5836,6 +5836,7 @@ async function runCargoTree(cargoPath, packageName) {
         'tree',
         '--prefix-depth',
         '--all-features',
+        '--no-dev-dependencies',
         '-p',
         packageName
     ];
