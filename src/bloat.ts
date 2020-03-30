@@ -74,6 +74,7 @@ export async function runCargoTree(cargoPath: string, packageName: string): Prom
     'tree',
     '--prefix-depth',
     '--all-features',
+    '--no-dev-dependencies',
     '-p',
     packageName
   ]
