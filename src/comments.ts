@@ -154,7 +154,7 @@ ${crateTable}
 
 </details>
 `
-
+  console.log(`Treediff: ${JSON.stringify(treeDiff, null, '\t')}`)
   const treeDiffText =
     treeDiff.length == 0
       ? `No changes to dependency tree`
@@ -211,7 +211,7 @@ export function createComment(masterCommit: string | null, currentCommit: string
       ? ''
       : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${masterCommit}..${currentCommit}))`
 
-  let innerComment = ""
+  let innerComment
 
   if (snapshots.length == 1) {
     innerComment = createSnapshotComment(snapshots[0])
