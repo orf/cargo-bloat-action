@@ -6042,7 +6042,7 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
         innerComment = snapshots.map(snapshot => {
             const comment = createSnapshotComment(snapshot);
             return `<details>
-<summary>${snapshot.packageName}</summary>
+<summary><strong>${snapshot.packageName}</strong></summary>
 <br />
 ${comment}
 </details>`;
