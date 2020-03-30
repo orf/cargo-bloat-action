@@ -138,7 +138,7 @@ export function createSnapshotComment(
         prefix = "-"
       }
       const splitLines = change.value.split("\n")
-      treeDiffLines.push(...splitLines.map(line=>`${prefix} ${line}`))
+      treeDiffLines.push(splitLines.map(line=>`${prefix} ${line}`).join("\n"))
     })
 
     treeDiff = treeDiffLines.join('') + '\n'
