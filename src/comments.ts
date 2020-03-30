@@ -221,7 +221,7 @@ export function createComment(masterCommit: string | null, currentCommit: string
     innerComment = snapshots.map(snapshot => {
       const comment = createSnapshotComment(snapshot)
       return `<details>
-<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changed)" : ""}</summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes :warning:)" : ""}</summary>
 <br />
 ${comment}
 </details>`
