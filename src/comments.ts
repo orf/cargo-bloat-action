@@ -154,18 +154,13 @@ ${crateTable}
 
 </details>
 `
-  console.log(`Treediff: ${JSON.stringify(treeDiff, null, '\t')}`)
-  const treeDiffText =
-    treeDiff.length == 0
-      ? `No changes to dependency tree`
-      : `
-
+  const treeDiffText = `
 <details>
-<summary>Dependency tree changes</summary>
+<summary>Dependency tree</summary>
 <br />
 
 \`\`\`diff
-@@ Dependency tree changes @@
+@@ Dependency tree @@
 
 ${treeDiff}
 \`\`\`
