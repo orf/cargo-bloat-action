@@ -131,10 +131,11 @@ export function createSnapshotComment(
 
     diff.treeDiff.forEach(change => {
       treeDiffLines.push(JSON.stringify(change))
+      treeDiffLines.push(change.value)
       // treeDiffLines.push(...hunk.lines)
     })
 
-    treeDiff = treeDiffLines.join('\n') + '\n'
+    treeDiff = treeDiffLines.join('') + '\n'
   }
 
   const crateDetailsText =
@@ -215,7 +216,7 @@ export function createComment(masterCommit: string | null, currentCommit: string
     innerComment = snapshots.map(snapshot => {
       const comment = createSnapshotComment(snapshot)
       return `<details>
-<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes)" : ""}</summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changed)" : ""}</summary>
 <br />
 ${comment}
 </details>`

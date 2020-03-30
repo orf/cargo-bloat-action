@@ -5970,9 +5970,10 @@ function createSnapshotComment(diff) {
         const treeDiffLines = [];
         diff.treeDiff.forEach(change => {
             treeDiffLines.push(JSON.stringify(change));
+            treeDiffLines.push(change.value);
             // treeDiffLines.push(...hunk.lines)
         });
-        treeDiff = treeDiffLines.join('\n') + '\n';
+        treeDiff = treeDiffLines.join('') + '\n';
     }
     const crateDetailsText = crateTableRows.length == 0
         ? 'No changes to crate sizes'
@@ -6042,7 +6043,7 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
         innerComment = snapshots.map(snapshot => {
             const comment = createSnapshotComment(snapshot);
             return `<details>
-<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes)" : ""}</summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changed)" : ""}</summary>
 <br />
 ${comment}
 </details>`;
