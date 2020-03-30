@@ -5762,7 +5762,8 @@ function compareSnapshots(packageName, masterCommit, current, master) {
     const oldSize = masterFileSize;
     const oldTextSize = masterTextSize;
     const treeDiff = (master === null || master === void 0 ? void 0 : master.tree) && master.tree !== current.tree ?
-        Object(lib.structuredPatch)("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree);
+        Object(lib.diffLines)(treeToDisplay(master.tree), treeToDisplay(current.tree)) : treeToDisplay(current.tree);
+    // Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
     return {
         packageName,
         sizeDifference,
@@ -5967,8 +5968,9 @@ function createSnapshotComment(diff) {
     }
     else {
         const treeDiffLines = [];
-        diff.treeDiff.forEach(hunk => {
-            treeDiffLines.push(...hunk.lines);
+        diff.treeDiff.forEach(change => {
+            treeDiffLines.push(JSON.stringify(change));
+            // treeDiffLines.push(...hunk.lines)
         });
         treeDiff = treeDiffLines.join('\n') + '\n';
     }
