@@ -17,6 +17,11 @@ use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  let body = reqwest::get("https://www.rust-lang.org")
+     .await.expect("error fetching")
+     .text()
+     .await;
+  
   let client = reqwest::Client::new();
   let mut map = HashMap::new();
   map.insert("lang", "rust");
