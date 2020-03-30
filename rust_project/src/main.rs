@@ -13,13 +13,18 @@
 //  println!("{}", serde_json::to_string(&X).unwrap());
 //}
 
+use std::collections::HashMap;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-  // println!("{}", serde_json::to_string(&X).unwrap());
-  let body = reqwest::get("https://www.rust-lang.org")
-    .await.expect("error fetching")
-    .text()
-    .await;
+  let client = reqwest::Client::new();
+  let mut map = HashMap::new();
+  map.insert("lang", "rust");
+  map.insert("body", "json");
+  let body = client.post("https://www.rust-lang.org")
+    .json(&map)
+    .send()
+    .await.expect("error fetching");
 
   println!("{:?}", body);
   Ok(())
