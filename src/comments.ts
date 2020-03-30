@@ -75,7 +75,6 @@ export async function createOrUpdateComment(
 }
 
 export function createSnapshotComment(
-  toolchain: string,
   diff: SnapshotDifference
 ): string {
   const crateTableRows: Array<[string, string]> = []
@@ -122,33 +121,20 @@ export function createSnapshotComment(
 
   const sizeTable = table(sizeTableRows)
 
-  const emojiList = {
-    apple: 'apple',
-    windows: 'office',
-    arm: 'muscle',
-    linux: 'cowboy_hat_face' // Why not?
+
+  let treeDiff
+
+  if (typeof diff.treeDiff === 'string') {
+    treeDiff = diff.treeDiff
+  } else {
+    const treeDiffLines: Array<string> = []
+
+    diff.treeDiff.forEach(hunk => {
+      treeDiffLines.push(...hunk.lines)
+    })
+
+    treeDiff = treeDiffLines.join('\n') + '\n'
   }
-
-  let selectedEmoji = 'crab'
-  for (const [key, emoji] of Object.entries(emojiList)) {
-    if (toolchain.includes(key)) {
-      selectedEmoji = emoji
-      break
-    }
-  }
-
-  const treeDiffLines : Array<string> = []
-
-  diff.treeDiff.forEach(hunk => {
-    treeDiffLines.push(...hunk.lines)
-  });
-
-  const treeDiff = treeDiffLines.join('\n') + '\n';
-
-  const compareCommitText =
-    diff.masterCommit == null
-      ? ''
-      : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`
 
   const crateDetailsText =
     crateTableRows.length == 0
@@ -188,8 +174,6 @@ ${treeDiff}
 `
 
   return `
-:${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
-
 \`\`\`diff
 @@ Size breakdown @@
 
@@ -200,7 +184,56 @@ ${sizeTable}
 ${crateDetailsText}
 
 ${treeDiffText}
-
-Commit: ${diff.currentCommit} ${compareCommitText}
 `
+}
+
+export function createComment(masterCommit: string | null, currentCommit: string,
+                              toolchain: string,
+                              snapshots: SnapshotDifference[]): string {
+  const emojiList = {
+    apple: 'apple',
+    windows: 'office',
+    arm: 'muscle',
+    linux: 'cowboy_hat_face' // Why not?
+  }
+
+  let selectedEmoji = 'crab'
+
+  for (const [key, emoji] of Object.entries(emojiList)) {
+    if (toolchain.includes(key)) {
+      selectedEmoji = emoji
+      break
+    }
+  }
+
+  const compareCommitText =
+    masterCommit == null
+      ? ''
+      : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${masterCommit}..${currentCommit}))`
+
+  let innerComment = ""
+
+  if (snapshots.length == 1) {
+    innerComment = createSnapshotComment(snapshots[0])
+  } else {
+    innerComment = snapshots.map(snapshot => {
+      const comment = createSnapshotComment(snapshot)
+      return `
+      <details>
+      <summary>${snapshot.packageName}</summary>
+      <br />
+      ${comment}
+      </details>
+      `
+    }).join('\n')
+  }
+
+
+  return `
+  :${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
+
+  ${innerComment}
+
+  Commit: ${currentCommit} ${compareCommitText}
+  `
 }

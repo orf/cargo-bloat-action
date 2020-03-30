@@ -31,7 +31,7 @@ export declare interface SnapshotDifference {
 
   crateDifference: Array<CrateDifference>
 
-  treeDiff: Hunk[]
+  treeDiff: Hunk[] | string
 }
 
 export declare interface Crate {
@@ -100,7 +100,7 @@ export function compareSnapshots(
   const oldTextSize = masterTextSize
 
   const treeDiff = master?.tree && master.tree !== current.tree ?
-    Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : []
+    Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
 
   return {
     packageName,

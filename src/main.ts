@@ -15,6 +15,7 @@ import {
 } from './bloat'
 // import {createOrUpdateComment, createSnapshotComment} from './comments'
 import * as io from "@actions/io"
+import {createComment, createOrUpdateComment, createSnapshotComment} from "./comments"
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -99,10 +100,11 @@ async function run(): Promise<void> {
         return compareSnapshots(name, masterCommit, currentPackage, masterSnapshot?.packages?.[name] || null)
       })
       core.info(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`)
-      // await createOrUpdateComment(
-      //   versions.toolchain,
-      //   createSnapshotComment(versions.toolchain, snapshotDiff)
-      // )
+      const comment = createComment(masterCommit, currentSnapshot.commit, versions.toolchain, snapShotDiffs);
+      await createOrUpdateComment(
+        versions.toolchain,
+        comment
+      )
     }
   )
 }
