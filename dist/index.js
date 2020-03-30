@@ -6041,13 +6041,11 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
     else {
         innerComment = snapshots.map(snapshot => {
             const comment = createSnapshotComment(snapshot);
-            return `
-      <details>
-      <summary>${snapshot.packageName}</summary>
-      <br />
-      ${comment}
-      </details>
-      `;
+            return `<details>
+<summary>${snapshot.packageName}</summary>
+<br />
+${comment}
+</details>`;
         }).join('\n');
     }
     return `

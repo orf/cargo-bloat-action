@@ -218,13 +218,11 @@ export function createComment(masterCommit: string | null, currentCommit: string
   } else {
     innerComment = snapshots.map(snapshot => {
       const comment = createSnapshotComment(snapshot)
-      return `
-      <details>
-      <summary>${snapshot.packageName}</summary>
-      <br />
-      ${comment}
-      </details>
-      `
+      return `<details>
+<summary>${snapshot.packageName}</summary>
+<br />
+${comment}
+</details>`
     }).join('\n')
   }
 
