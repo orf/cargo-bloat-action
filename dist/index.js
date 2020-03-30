@@ -5977,7 +5977,7 @@ function createSnapshotComment(diff) {
                 prefix = "-";
             }
             const splitLines = change.value.split("\n");
-            treeDiffLines.push(splitLines.map(line => `${prefix} ${line}`).join("\n") + "\n");
+            treeDiffLines.push(splitLines.slice(0, -1).map(line => `${prefix} ${line}`).join("\n") + "\n");
         });
         treeDiff = treeDiffLines.join('') + '\n';
     }
