@@ -131,8 +131,14 @@ export function createSnapshotComment(
 
     diff.treeDiff.forEach(change => {
       treeDiffLines.push(JSON.stringify(change) + '\n')
-      treeDiffLines.push(change.value)
-      // treeDiffLines.push(...hunk.lines)
+      let prefix = " "
+      if (change.added) {
+        prefix = "+"
+      } else if (change.removed) {
+        prefix = "-"
+      }
+      const splitLines = change.value.split("\n")
+      treeDiffLines.push(...splitLines.map(line=>`${prefix} ${line}`))
     })
 
     treeDiff = treeDiffLines.join('') + '\n'
