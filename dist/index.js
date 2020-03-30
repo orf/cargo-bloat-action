@@ -6040,7 +6040,7 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
         innerComment = snapshots.map(snapshot => {
             const comment = createSnapshotComment(snapshot);
             return `<details>
-<summary><strong>${snapshot.packageName}</strong></summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes)" : ""}</summary>
 <br />
 ${comment}
 </details>`;
