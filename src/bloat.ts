@@ -1,7 +1,7 @@
-import {ExecOptions} from '@actions/exec/lib/interfaces'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import {Crate} from './snapshots'
+import {captureOutput} from "./utils"
 
 export declare class Versions {
   rustc: string
@@ -15,32 +15,17 @@ export declare interface BloatOutput {
   crates: Array<Crate>
 }
 
-export declare interface TreeOutput {
-  lines: Array<string>
+export declare interface Package {
+  bloat: BloatOutput
+  tree: string
 }
 
 export declare interface CargoPackage {
   name: string
 }
 
-export declare interface CargoMetadata {
+declare interface CargoMetadata {
   packages: Array<CargoPackage>
-}
-
-async function captureOutput(
-  cmd: string,
-  args: Array<string>
-): Promise<string> {
-  let stdout = ''
-
-  const options: ExecOptions = {}
-  options.listeners = {
-    stdout: (data: Buffer): void => {
-      stdout += data.toString()
-    }
-  }
-  await exec.exec(cmd, args, options)
-  return stdout
 }
 
 export async function getToolchainVersions(): Promise<Versions> {
@@ -68,7 +53,7 @@ export async function installCargoDependencies(cargoPath: string): Promise<void>
   await exec.exec(cargoPath, args)
 }
 
-export async function runCargoBloat(cargoPath: string): Promise<BloatOutput> {
+export async function runCargoBloat(cargoPath: string, packageName: string): Promise<BloatOutput> {
   const args = [
     'bloat',
     '--release',
@@ -76,7 +61,9 @@ export async function runCargoBloat(cargoPath: string): Promise<BloatOutput> {
     '--all-features',
     '--crates',
     '-n',
-    '0'
+    '0',
+    '-p',
+    packageName
   ]
   const output = await captureOutput(cargoPath, args)
   return JSON.parse(output)
@@ -95,8 +82,8 @@ export async function runCargoTree(cargoPath: string, packageName: string): Prom
   return lines.slice(1).join("\n")
 }
 
-export async function getCargoPackages(cargoPath: string): Promise<CargoMetadata> {
+export async function getCargoPackages(cargoPath: string): Promise<Array<CargoPackage>> {
   const args = ['metadata', '--no-deps', '--format-version=1']
   const output = await captureOutput(cargoPath, args)
-  return JSON.parse(output)
+  return (JSON.parse(output) as CargoMetadata).packages
 }

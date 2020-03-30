@@ -1,0 +1,9 @@
+[package]
+name = "rust_project2"
+version = "0.1.0"
+authors = ["Tom Forbes <tom@tomforb.es>"]
+edition = "2018"
+
+[dependencies]
+reqwest = { version = "0.10", features = ["json"] }
+futures = "0.3"

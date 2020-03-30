@@ -7,14 +7,15 @@ import {
   recordSnapshot
 } from './snapshots'
 import {
-  BloatOutput, CargoMetadata, getCargoPackages,
+  BloatOutput, CargoPackage, getCargoPackages,
   getToolchainVersions,
-  installCargoDependencies,
-  runCargoBloat, runCargoTree, TreeOutput,
+  installCargoDependencies, Package,
+  runCargoBloat, runCargoTree,
   Versions
 } from './bloat'
-import {createOrUpdateComment, createSnapshotComment} from './comments'
+// import {createOrUpdateComment, createSnapshotComment} from './comments'
 import * as io from "@actions/io"
+import {createComment, createOrUpdateComment, createSnapshotComment} from "./comments"
 
 const ALLOWED_EVENTS = ['pull_request', 'push']
 
@@ -41,45 +42,39 @@ async function run(): Promise<void> {
     }
   )
 
-  const bloatData = await core.group(
-    'Running cargo-bloat',
-    async (): Promise<BloatOutput> => {
-      return await runCargoBloat(cargoPath)
-    }
-  )
-
-  const metadata = await core.group(
+  const packages = await core.group(
     'Inspecting cargo packages',
-    async (): Promise<CargoMetadata> => {
+    async (): Promise<Array<CargoPackage>> => {
       return await getCargoPackages(cargoPath)
     }
   )
 
-  let treeData: string
+  const packageData : Record<string, Package> = {}
 
-  if (metadata.packages.length == 1) {
-    const packageName = metadata.packages[0].name
-    treeData = await core.group(
-      `Running cargo-tree on package ${packageName}`,
-      async (): Promise<string> => {
-        return await runCargoTree(cargoPath, packageName)
+  for (const cargoPackage of packages) {
+    const bloatData = await core.group(
+      `Running cargo-bloat on package ${cargoPackage.name}`,
+      async (): Promise<BloatOutput> => {
+        return await runCargoBloat(cargoPath, cargoPackage.name)
       }
     )
-  } else {
-    treeData = ""
+    const treeData = await core.group(
+      `Running cargo-tree on package ${cargoPackage.name}`,
+      async (): Promise<string> => {
+        return await runCargoTree(cargoPath, cargoPackage.name)
+      }
+    )
+    packageData[cargoPackage.name] = {bloat: bloatData, tree: treeData}
   }
 
   const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`
 
   const currentSnapshot: Snapshot = {
     commit: github.context.sha,
-    crates: bloatData.crates,
-    file_size: bloatData['file-size'],
-    text_section_size: bloatData['text-section-size'],
     toolchain: versions.toolchain,
     rustc: versions.rustc,
     bloat: versions.bloat,
-    tree: treeData,
+    packages: packageData,
   }
 
   if (github.context.eventName == 'push') {
@@ -99,11 +94,16 @@ async function run(): Promise<void> {
   await core.group(
     'Posting comment',
     async (): Promise<void> => {
-      const snapshotDiff = compareSnapshots(currentSnapshot, masterSnapshot)
-      core.debug(`snapshot: ${JSON.stringify(snapshotDiff, undefined, 2)}`)
+      const masterCommit = masterSnapshot?.commit || null;
+      const snapShotDiffs = Object.entries(currentSnapshot.packages).map(obj => {
+        const [name, currentPackage] = obj
+        return compareSnapshots(name, masterCommit, currentPackage, masterSnapshot?.packages?.[name] || null)
+      })
+      core.info(`snapshot: ${JSON.stringify(snapShotDiffs, undefined, 2)}`)
+      const comment = createComment(masterCommit, currentSnapshot.commit, versions.toolchain, snapShotDiffs);
       await createOrUpdateComment(
         versions.toolchain,
-        createSnapshotComment(versions.toolchain, snapshotDiff)
+        comment
       )
     }
   )

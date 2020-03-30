@@ -1,6 +1,10 @@
 import axios from 'axios'
 import * as core from '@actions/core'
 import {context} from '@actions/github'
+import * as Diff from 'diff'
+import {Hunk} from 'diff'
+import {Package} from "./bloat"
+import {shouldIncludeInDiff, treeToDisplay} from "./utils"
 
 declare interface CrateDifference {
   name: string
@@ -12,6 +16,8 @@ declare interface CrateDifference {
 }
 
 export declare interface SnapshotDifference {
+  packageName: string
+
   currentSize: number
   oldSize: number
   sizeDifference: number
@@ -24,6 +30,8 @@ export declare interface SnapshotDifference {
   currentCommit: string
 
   crateDifference: Array<CrateDifference>
+
+  treeDiff: Hunk[] | string
 }
 
 export declare interface Crate {
@@ -33,52 +41,31 @@ export declare interface Crate {
 
 export declare interface Snapshot {
   commit: string
-  file_size: number
-  text_section_size: number
   toolchain: string
   rustc: string
   bloat: string
-  crates: Array<Crate>
-  tree: string
+  packages: Record<string, Package>
 }
 
-export function shouldIncludeInDiff(
-  newValue: number,
-  oldValue: number | null
-): boolean {
-  const changedThreshold = 4000
-  const newThreshold = 350
-
-  if (oldValue == null) {
-    // If we are adding a new crate that adds less than 350 bytes of bloat, ignore it.
-    return newValue > newThreshold
-  }
-  const numberDiff = newValue - oldValue
-
-  // If the size difference is between 4kb either way, don't record the difference.
-  if (numberDiff > -changedThreshold && numberDiff < changedThreshold) {
-    return false
-  }
-
-  return newValue != oldValue
-}
 
 export function compareSnapshots(
-  current: Snapshot,
-  master: Snapshot | null
+  packageName: string,
+  masterCommit: string | null,
+  current: Package,
+  master: Package | null
 ): SnapshotDifference {
-  const masterFileSize = master?.file_size || 0
-  const masterTextSize = master?.text_section_size || 0
+  const masterFileSize = master?.bloat["file-size"] || 0
+  const masterTextSize = master?.bloat["text-section-size"]|| 0
 
-  const sizeDifference = current.file_size - masterFileSize
-  const textDifference = current.text_section_size - masterTextSize
+  const sizeDifference = current.bloat["file-size"] - masterFileSize
+  const textDifference = current.bloat["text-section-size"] - masterTextSize
 
-  const currentCratesObj: {[key: string]: number} = {}
-  for (const o of current.crates) {
+  const currentCratesObj: { [key: string]: number } = {}
+  for (const o of current.bloat.crates) {
     currentCratesObj[o.name] = o.size
   }
-  const masterCratesObj: {[key: string]: number} = {}
-  for (const o of master?.crates || []) {
+  const masterCratesObj: { [key: string]: number } = {}
+  for (const o of master?.bloat.crates || []) {
     masterCratesObj[o.name] = o.size
   }
 
@@ -106,13 +93,17 @@ export function compareSnapshots(
     crateDifference.push({name, new: null, old: oldValue})
   }
 
-  const currentSize = current.file_size
-  const currentTextSize = current.text_section_size
+  const currentSize = current.bloat["file-size"]
+  const currentTextSize = current.bloat["text-section-size"]
 
   const oldSize = masterFileSize
   const oldTextSize = masterTextSize
 
+  const treeDiff = master?.tree && master.tree !== current.tree ?
+    Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
+
   return {
+    packageName,
     sizeDifference,
     textDifference,
     crateDifference,
@@ -120,8 +111,9 @@ export function compareSnapshots(
     oldSize,
     currentTextSize,
     oldTextSize,
-    masterCommit: master?.commit || null,
-    currentCommit: context.sha
+    masterCommit,
+    currentCommit: context.sha,
+    treeDiff
   }
 }
 

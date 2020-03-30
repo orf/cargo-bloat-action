@@ -1,9 +1,10 @@
 import * as github from '@actions/github'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
-import {shouldIncludeInDiff, SnapshotDifference} from './snapshots'
+import {SnapshotDifference} from './snapshots'
 import fileSize from 'filesize'
 import table from 'text-table'
+import {shouldIncludeInDiff} from "./utils"
 
 export function githubClient(): github.GitHub {
   const token = core.getInput('token')
@@ -74,7 +75,6 @@ export async function createOrUpdateComment(
 }
 
 export function createSnapshotComment(
-  toolchain: string,
   diff: SnapshotDifference
 ): string {
   const crateTableRows: Array<[string, string]> = []
@@ -121,25 +121,20 @@ export function createSnapshotComment(
 
   const sizeTable = table(sizeTableRows)
 
-  const emojiList = {
-    apple: 'apple',
-    windows: 'office',
-    arm: 'muscle',
-    linux: 'cowboy_hat_face' // Why not?
-  }
 
-  let selectedEmoji = 'crab'
-  for (const [key, emoji] of Object.entries(emojiList)) {
-    if (toolchain.includes(key)) {
-      selectedEmoji = emoji
-      break
-    }
-  }
+  let treeDiff
 
-  const compareCommitText =
-    diff.masterCommit == null
-      ? ''
-      : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${diff.masterCommit}..${diff.currentCommit}))`
+  if (typeof diff.treeDiff === 'string') {
+    treeDiff = diff.treeDiff
+  } else {
+    const treeDiffLines: Array<string> = []
+
+    diff.treeDiff.forEach(hunk => {
+      treeDiffLines.push(...hunk.lines)
+    })
+
+    treeDiff = treeDiffLines.join('\n') + '\n'
+  }
 
   const crateDetailsText =
     crateTableRows.length == 0
@@ -157,11 +152,28 @@ export function createSnapshotComment(
 ${crateTable}
 \`\`\`
 
-</details>`
+</details>
+`
+
+  const treeDiffText =
+    treeDiff.length == 0
+      ? `No changes to dependency tree`
+      : `
+
+<details>
+<summary>Dependency tree changes</summary>
+<br />
+
+\`\`\`diff
+@@ Dependency tree changes @@
+
+${treeDiff}
+\`\`\`
+
+</details>
+`
 
   return `
-:${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
-
 \`\`\`diff
 @@ Size breakdown @@
 
@@ -171,6 +183,55 @@ ${sizeTable}
 
 ${crateDetailsText}
 
-Commit: ${diff.currentCommit} ${compareCommitText}
+${treeDiffText}
 `
+}
+
+export function createComment(masterCommit: string | null, currentCommit: string,
+                              toolchain: string,
+                              snapshots: SnapshotDifference[]): string {
+  const emojiList = {
+    apple: 'apple',
+    windows: 'office',
+    arm: 'muscle',
+    linux: 'cowboy_hat_face' // Why not?
+  }
+
+  let selectedEmoji = 'crab'
+
+  for (const [key, emoji] of Object.entries(emojiList)) {
+    if (toolchain.includes(key)) {
+      selectedEmoji = emoji
+      break
+    }
+  }
+
+  const compareCommitText =
+    masterCommit == null
+      ? ''
+      : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${masterCommit}..${currentCommit}))`
+
+  let innerComment = ""
+
+  if (snapshots.length == 1) {
+    innerComment = createSnapshotComment(snapshots[0])
+  } else {
+    innerComment = snapshots.map(snapshot => {
+      const comment = createSnapshotComment(snapshot)
+      return `<details>
+<summary><strong>${snapshot.packageName}</strong></summary>
+<br />
+${comment}
+</details>`
+    }).join('\n')
+  }
+
+
+  return `
+  :${selectedEmoji}: Cargo bloat for toolchain **${toolchain}** :${selectedEmoji}:
+
+  ${innerComment}
+
+  Commit: ${currentCommit} ${compareCommitText}
+  `
 }
