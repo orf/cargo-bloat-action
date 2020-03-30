@@ -130,7 +130,6 @@ export function createSnapshotComment(
     const treeDiffLines: Array<string> = []
 
     diff.treeDiff.forEach(change => {
-      treeDiffLines.push(JSON.stringify(change) + '\n')
       let prefix = " "
       if (change.added) {
         prefix = "+"

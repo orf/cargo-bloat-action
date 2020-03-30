@@ -5969,7 +5969,6 @@ function createSnapshotComment(diff) {
     else {
         const treeDiffLines = [];
         diff.treeDiff.forEach(change => {
-            treeDiffLines.push(JSON.stringify(change) + '\n');
             let prefix = " ";
             if (change.added) {
                 prefix = "+";
