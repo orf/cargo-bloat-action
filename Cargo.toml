@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "rust_project",
-    "rust_project2",
+    "example_project_1",
+    "example_project_2",
 ]
 
