@@ -1,13 +1,15 @@
-use ureq::json;
+use futures::executor::block_on;
+
+async fn hello_world() {
+  let body = reqwest::get("https://www.rust-lang.org")
+    .await.expect("error fetching")
+    .text()
+    .await;
+
+  println!("{:?}", body);
+}
 
 fn main() {
-  // println!("{}", serde_json::to_string(&X).unwrap());
-  let resp = ureq::post("http://my-server.com/ingest")
-    .set("Transfer-Encoding", "chunked")
-    .send_json(json!({
-            "name": "martin",
-            "rust": true
-        }));
-
-  println!("{:?}", resp.into_json());
+  let future = hello_world(); // Nothing is printed
+  block_on(future); // `future` is run and "hello, world!" is printed
 }
