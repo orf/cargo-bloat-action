@@ -2,7 +2,7 @@ import axios from 'axios'
 import * as core from '@actions/core'
 import {context} from '@actions/github'
 import * as Diff from 'diff'
-import {Hunk} from 'diff'
+import {Change, Hunk} from 'diff'
 import {Package} from "./bloat"
 import {shouldIncludeInDiff, treeToDisplay} from "./utils"
 
@@ -31,7 +31,7 @@ export declare interface SnapshotDifference {
 
   crateDifference: Array<CrateDifference>
 
-  treeDiff: Hunk[] | string
+  treeDiff: Change[] | string
 }
 
 export declare interface Crate {
@@ -100,7 +100,8 @@ export function compareSnapshots(
   const oldTextSize = masterTextSize
 
   const treeDiff = master?.tree && master.tree !== current.tree ?
-    Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
+    Diff.diffLines(treeToDisplay(master.tree), treeToDisplay(current.tree)) : treeToDisplay(current.tree)
+    // Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
 
   return {
     packageName,

@@ -129,11 +129,18 @@ export function createSnapshotComment(
   } else {
     const treeDiffLines: Array<string> = []
 
-    diff.treeDiff.forEach(hunk => {
-      treeDiffLines.push(...hunk.lines)
+    diff.treeDiff.forEach(change => {
+      let prefix = " "
+      if (change.added) {
+        prefix = "+"
+      } else if (change.removed) {
+        prefix = "-"
+      }
+      const splitLines = change.value.split("\n")
+      treeDiffLines.push(splitLines.slice(0, -1).map(line=>`${prefix} ${line}`).join("\n") + "\n")
     })
 
-    treeDiff = treeDiffLines.join('\n') + '\n'
+    treeDiff = treeDiffLines.join('') + '\n'
   }
 
   const crateDetailsText =
@@ -154,18 +161,13 @@ ${crateTable}
 
 </details>
 `
-
-  const treeDiffText =
-    treeDiff.length == 0
-      ? `No changes to dependency tree`
-      : `
-
+  const treeDiffText = `
 <details>
-<summary>Dependency tree changes</summary>
+<summary>Dependency tree</summary>
 <br />
 
 \`\`\`diff
-@@ Dependency tree changes @@
+@@ Dependency tree @@
 
 ${treeDiff}
 \`\`\`
@@ -211,7 +213,7 @@ export function createComment(masterCommit: string | null, currentCommit: string
       ? ''
       : `([Compare with baseline commit](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${masterCommit}..${currentCommit}))`
 
-  let innerComment = ""
+  let innerComment
 
   if (snapshots.length == 1) {
     innerComment = createSnapshotComment(snapshots[0])
@@ -219,7 +221,7 @@ export function createComment(masterCommit: string | null, currentCommit: string
     innerComment = snapshots.map(snapshot => {
       const comment = createSnapshotComment(snapshot)
       return `<details>
-<summary><strong>${snapshot.packageName}</strong></summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes :warning:)" : ""}</summary>
 <br />
 ${comment}
 </details>`

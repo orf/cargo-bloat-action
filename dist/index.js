@@ -5762,7 +5762,8 @@ function compareSnapshots(packageName, masterCommit, current, master) {
     const oldSize = masterFileSize;
     const oldTextSize = masterTextSize;
     const treeDiff = (master === null || master === void 0 ? void 0 : master.tree) && master.tree !== current.tree ?
-        Object(lib.structuredPatch)("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree);
+        Object(lib.diffLines)(treeToDisplay(master.tree), treeToDisplay(current.tree)) : treeToDisplay(current.tree);
+    // Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
     return {
         packageName,
         sizeDifference,
@@ -5967,10 +5968,18 @@ function createSnapshotComment(diff) {
     }
     else {
         const treeDiffLines = [];
-        diff.treeDiff.forEach(hunk => {
-            treeDiffLines.push(...hunk.lines);
+        diff.treeDiff.forEach(change => {
+            let prefix = " ";
+            if (change.added) {
+                prefix = "+";
+            }
+            else if (change.removed) {
+                prefix = "-";
+            }
+            const splitLines = change.value.split("\n");
+            treeDiffLines.push(splitLines.slice(0, -1).map(line => `${prefix} ${line}`).join("\n") + "\n");
         });
-        treeDiff = treeDiffLines.join('\n') + '\n';
+        treeDiff = treeDiffLines.join('') + '\n';
     }
     const crateDetailsText = crateTableRows.length == 0
         ? 'No changes to crate sizes'
@@ -5989,16 +5998,13 @@ ${crateTable}
 
 </details>
 `;
-    const treeDiffText = treeDiff.length == 0
-        ? `No changes to dependency tree`
-        : `
-
+    const treeDiffText = `
 <details>
-<summary>Dependency tree changes</summary>
+<summary>Dependency tree</summary>
 <br />
 
 \`\`\`diff
-@@ Dependency tree changes @@
+@@ Dependency tree @@
 
 ${treeDiff}
 \`\`\`
@@ -6035,7 +6041,7 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
     const compareCommitText = masterCommit == null
         ? ''
         : `([Compare with baseline commit](https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/compare/${masterCommit}..${currentCommit}))`;
-    let innerComment = "";
+    let innerComment;
     if (snapshots.length == 1) {
         innerComment = createSnapshotComment(snapshots[0]);
     }
@@ -6043,7 +6049,7 @@ function createComment(masterCommit, currentCommit, toolchain, snapshots) {
         innerComment = snapshots.map(snapshot => {
             const comment = createSnapshotComment(snapshot);
             return `<details>
-<summary><strong>${snapshot.packageName}</strong></summary>
+<summary><strong>${snapshot.packageName}</strong>${shouldIncludeInDiff(snapshot.currentSize, snapshot.oldSize) ? " (Changes :warning:)" : ""}</summary>
 <br />
 ${comment}
 </details>`;
