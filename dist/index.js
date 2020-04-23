@@ -5764,6 +5764,8 @@ function compareSnapshots(packageName, masterCommit, current, master) {
     const treeDiff = (master === null || master === void 0 ? void 0 : master.tree) && master.tree !== current.tree ?
         Object(lib.diffLines)(treeToDisplay(master.tree), treeToDisplay(current.tree)) : treeToDisplay(current.tree);
     // Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
+    const oldDependenciesCount = (master === null || master === void 0 ? void 0 : master.tree.split("\n").length) || 0;
+    const newDependenciesCount = current.tree.split("\n").length;
     return {
         packageName,
         sizeDifference,
@@ -5775,7 +5777,9 @@ function compareSnapshots(packageName, masterCommit, current, master) {
         oldTextSize,
         masterCommit,
         currentCommit: github.context.sha,
-        treeDiff
+        treeDiff,
+        newDependenciesCount,
+        oldDependenciesCount
     };
 }
 async function fetchSnapshot(repo, toolchain) {
@@ -5981,6 +5985,14 @@ function createSnapshotComment(diff) {
         });
         treeDiff = treeDiffLines.join('') + '\n';
     }
+    let dependencyCountDiff;
+    if (diff.oldDependenciesCount == diff.newDependenciesCount) {
+        dependencyCountDiff = `Count: ${diff.oldDependenciesCount}`;
+    }
+    else {
+        dependencyCountDiff = `- Count: ${diff.oldDependenciesCount}\n`;
+        dependencyCountDiff += `+ Count: ${diff.newDependenciesCount}`;
+    }
     const crateDetailsText = crateTableRows.length == 0
         ? 'No changes to crate sizes'
         : `
@@ -6005,6 +6017,7 @@ ${crateTable}
 
 \`\`\`diff
 @@ Dependency tree @@
+${dependencyCountDiff}
 
 ${treeDiff}
 \`\`\`

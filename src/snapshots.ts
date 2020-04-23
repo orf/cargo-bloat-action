@@ -32,6 +32,8 @@ export declare interface SnapshotDifference {
   crateDifference: Array<CrateDifference>
 
   treeDiff: Change[] | string
+  oldDependenciesCount: number
+  newDependenciesCount: number
 }
 
 export declare interface Crate {
@@ -103,6 +105,9 @@ export function compareSnapshots(
     Diff.diffLines(treeToDisplay(master.tree), treeToDisplay(current.tree)) : treeToDisplay(current.tree)
     // Diff.structuredPatch("master", "branch", treeToDisplay(master.tree), treeToDisplay(current.tree), "", "", {}).hunks : treeToDisplay(current.tree)
 
+  const oldDependenciesCount = master?.tree.split("\n").length || 0
+  const newDependenciesCount = current.tree.split("\n").length
+
   return {
     packageName,
     sizeDifference,
@@ -114,7 +119,9 @@ export function compareSnapshots(
     oldTextSize,
     masterCommit,
     currentCommit: context.sha,
-    treeDiff
+    treeDiff,
+    newDependenciesCount,
+    oldDependenciesCount
   }
 }
 

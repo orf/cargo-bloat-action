@@ -143,6 +143,14 @@ export function createSnapshotComment(
     treeDiff = treeDiffLines.join('') + '\n'
   }
 
+  let dependencyCountDiff
+  if (diff.oldDependenciesCount == diff.newDependenciesCount) {
+    dependencyCountDiff = `Count: ${diff.oldDependenciesCount}`
+  } else {
+    dependencyCountDiff = `- Count: ${diff.oldDependenciesCount}\n`
+    dependencyCountDiff += `+ Count: ${diff.newDependenciesCount}`
+  }
+
   const crateDetailsText =
     crateTableRows.length == 0
       ? 'No changes to crate sizes'
@@ -168,6 +176,7 @@ ${crateTable}
 
 \`\`\`diff
 @@ Dependency tree @@
+${dependencyCountDiff}
 
 ${treeDiff}
 \`\`\`
