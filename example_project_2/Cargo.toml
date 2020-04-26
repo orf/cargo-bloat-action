@@ -5,4 +5,4 @@ authors = ["Tom Forbes <tom@tomforb.es>"]
 edition = "2018"
 
 [dependencies]
-ureq = { version = "*", features = ["tls"], default-features = false }
+ureq = { version = "*", default-features = false }
