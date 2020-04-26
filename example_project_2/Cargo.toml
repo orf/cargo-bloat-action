@@ -5,4 +5,4 @@ authors = ["Tom Forbes <tom@tomforb.es>"]
 edition = "2018"
 
 [dependencies]
-ureq = { version = "*", features = ["json", "charset"] }
+ureq = { version = "*", default-features = false }

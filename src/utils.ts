@@ -20,12 +20,12 @@ export function treeToDisplay(tree: string): string {
     const currentKeyPath: Array<string> = []
 
     tree.split('\n').forEach(line => {
-        const found = line.match(/^(\d+)(.*) (\(\*\))?/)
+        const found = line.match(/^(\d+)(.*)?/)
         if (found == null) {
             return
         }
         const indent = parseInt(found[1], 10) - 1
-        const ourKey = found[2]
+        const ourKey = found[2].replace("(*)", "")
 
         if (indent + 1 > currentKeyPath.length) {
             currentKeyPath.push(ourKey)
