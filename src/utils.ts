@@ -6,11 +6,11 @@ import * as exec from "@actions/exec"
 export function treeToDisplay(tree: string): string {
     // The syntax looks like this:
     // 1serde v1.0.104
-    // 2itoa v0.4.5
+    // 2itoa v0.4.5 (*)
     // 1another v1.2.3
     // And we need to construct a tree object that looks like
     // {
-    //   'serde: v1.0.104': {
+    //   'serde v1.0.104': {
     //       'iota v0.4.5': null
     //   },
     //   'another v1.2.3': null
@@ -20,7 +20,7 @@ export function treeToDisplay(tree: string): string {
     const currentKeyPath: Array<string> = []
 
     tree.split('\n').forEach(line => {
-        const found = line.match(/^(\d+)(.*)/)
+        const found = line.match(/^(\d+)(.*) (\(\*\))?/)
         if (found == null) {
             return
         }

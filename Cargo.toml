@@ -4,3 +4,6 @@ members = [
     "example_project_2",
 ]
 
+[profile.release]
+lto = true
+
