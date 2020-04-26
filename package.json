@@ -34,8 +34,7 @@
     "axios": "^0.19.2",
     "diff": "^4.0.2",
     "filesize": "^6.1.0",
-    "lodash.set": "^4.3.2",
-    "lodash.sortby": "^4.7.0",
+    "lodash": "^4.17.15",
     "text-table": "^0.2.0",
     "treeify": "^1.1.0"
   },
