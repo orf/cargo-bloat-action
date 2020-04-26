@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "example_project_2",
+    "example_project",
 ]
 
 [profile.release]

@@ -1,6 +1,6 @@
 # Cargo Bloat Action :rocket:
 
-Analyse and track your Rust projects size over time. Each pull request will give you a:
+Analyse and track your Rust projects size over time. This action runs on every pull request and gives you a breakdown of:
 
 ### Total size change
 
@@ -10,9 +10,11 @@ Analyse and track your Rust projects size over time. Each pull request will give
 
 ![](./images/breakdown.png)
 
-### A breakdown of your dependency tree (`cargo tree`)
+### Changes in your dependency tree (`cargo tree`)
 
 ![](./images/dependencies.png)
 
 ## Why?
+
+## Installation
 
