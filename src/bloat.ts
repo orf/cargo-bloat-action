@@ -54,7 +54,7 @@ export async function installCargoDependencies(cargoPath: string): Promise<void>
 }
 
 export async function runCargoBloat(cargoPath: string, packageName: string): Promise<BloatOutput> {
-  const args = [
+  const defaultArgs = [
     'bloat',
     '--release',
     '--message-format=json',
@@ -65,19 +65,25 @@ export async function runCargoBloat(cargoPath: string, packageName: string): Pro
     '-p',
     packageName
   ]
-  const output = await captureOutput(cargoPath, args)
+  let optionalArgs = core.getInput("bloat_flags");
+  if (optionalArgs.length > 0) {
+    const output = await captureOutput(cargoPath, ["bloat", ...optionalArgs.split(" ")]);
+    return JSON.parse(output)
+  }
+  const output = await captureOutput(cargoPath, defaultArgs)
   return JSON.parse(output)
 }
 
 export async function runCargoTree(cargoPath: string, packageName: string): Promise<string> {
-  const args = [
+  let optionalArgs = core.getInput("tree_args");
+  const args = (optionalArgs.length > 0) ? ['tree', ...optionalArgs.split(" ")] : [
     'tree',
     '--prefix-depth',
     '--all-features',
     '--no-dev-dependencies',
     '-p',
     packageName
-  ]
+  ];
   // The first line has the version and other metadata in it. We strip that here:
   const lines = (await captureOutput(cargoPath, args)).split("\n")
   return lines.slice(1).join("\n")

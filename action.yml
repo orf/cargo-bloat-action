@@ -8,6 +8,9 @@ inputs:
   token:
     description: 'Github token to use'
     required: true
+  bloat_args:
+    description: 'Custom args to pass to bloat'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
