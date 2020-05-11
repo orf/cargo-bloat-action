@@ -8,6 +8,12 @@ inputs:
   token:
     description: 'Github token to use'
     required: true
+  bloat_args:
+    description: 'Custom arguments to pass to cargo bloat'
+    required: false
+  tree_args:
+    description: 'Custom arguments to pass to cargo tree'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
