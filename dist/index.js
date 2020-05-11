@@ -5833,7 +5833,7 @@ async function runCargoBloat(cargoPath, packageName) {
         '-p',
         packageName
     ];
-    let optionalArgs = Object(core.getInput)("bloat_flags");
+    let optionalArgs = Object(core.getInput)("bloat_args");
     if (optionalArgs.length > 0) {
         const output = await captureOutput(cargoPath, ["bloat", ...optionalArgs.split(" ")]);
         return JSON.parse(output);

@@ -65,7 +65,7 @@ export async function runCargoBloat(cargoPath: string, packageName: string): Pro
     '-p',
     packageName
   ]
-  let optionalArgs = core.getInput("bloat_flags");
+  let optionalArgs = core.getInput("bloat_args");
   if (optionalArgs.length > 0) {
     const output = await captureOutput(cargoPath, ["bloat", ...optionalArgs.split(" ")]);
     return JSON.parse(output)
