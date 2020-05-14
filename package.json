@@ -45,7 +45,7 @@
     "@types/handlebars-helpers": "^0.5.2",
     "@types/text-table": "^0.2.1",
     "@types/treeify": "^1.0.0",
-    "@types/jest": "^25.2.1",
+    "@types/jest": "^25.2.2",
     "@types/node": "^13.13.5",
     "@zeit/ncc": "^0.22.1",
     "js-yaml": "^3.13.1",
