@@ -12,7 +12,9 @@ export declare class Versions {
 export declare interface BloatOutput {
   'file-size': number
   'text-section-size': number
-  crates: Array<Crate>
+  // Yeah this makes no sense and is hacky as hell. Sue me.
+  crates: Array<Crate> | undefined,
+  functions: Array<Crate> | undefined
 }
 
 export declare interface Package {
@@ -54,23 +56,32 @@ export async function installCargoDependencies(cargoPath: string): Promise<void>
 }
 
 export async function runCargoBloat(cargoPath: string, packageName: string): Promise<BloatOutput> {
-  const defaultArgs = [
-    'bloat',
+  const noCrates = core.getInput("by_function")
+
+  const flags = [
     '--release',
     '--message-format=json',
     '--all-features',
-    '--crates',
+  ]
+
+  if (!noCrates) {
+    flags.push('--crates')
+  }
+
+  let bloatArgs = [
+    'bloat',
+    ...flags,
     '-n',
     '0',
     '-p',
     packageName
   ]
-  let optionalArgs = core.getInput("bloat_args");
+  let optionalArgs = core.getInput("bloat_args")
+
   if (optionalArgs.length > 0) {
-    const output = await captureOutput(cargoPath, ["bloat", ...optionalArgs.split(" ")]);
-    return JSON.parse(output)
+    bloatArgs = ["bloat", ...optionalArgs.split(' ')]
   }
-  const output = await captureOutput(cargoPath, defaultArgs)
+  const output = await captureOutput(cargoPath, bloatArgs)
   return JSON.parse(output)
 }
 

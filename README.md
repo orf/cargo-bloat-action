@@ -39,6 +39,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Options
+
+* `by_function` - Display per-function bloat instead of per-crate bloat
+* `bloat_args` - Custom arguments to pass to `cargo bloat`
+* `tree_args` - Custom arguments to pass to `cargo tree`
+
 ## Screenshots
 
 ### Total size change
