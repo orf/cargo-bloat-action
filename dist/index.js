@@ -4211,6 +4211,13 @@ async function captureOutput(cmd, args) {
 
 
 
+function crateOrFunctionName(crate) {
+    if (crate.crate) {
+        // It's really a function....
+        return `${crate.crate} : ${crate.name}`;
+    }
+    return crate.name;
+}
 function compareSnapshots(packageName, masterCommit, current, master) {
     const masterFileSize = (master === null || master === void 0 ? void 0 : master.bloat["file-size"]) || 0;
     const masterTextSize = (master === null || master === void 0 ? void 0 : master.bloat["text-section-size"]) || 0;
@@ -4224,11 +4231,11 @@ function compareSnapshots(packageName, masterCommit, current, master) {
         throw Error("Neither crates or functions are defined!");
     }
     for (const o of currentCrateOrFunction) {
-        currentCratesObj[o.name] = o.size;
+        currentCratesObj[crateOrFunctionName(o)] = o.size;
     }
     const masterCratesObj = {};
     for (const o of masterCrateOrFunction || []) {
-        masterCratesObj[o.name] = o.size;
+        masterCratesObj[crateOrFunctionName(o)] = o.size;
     }
     // Ignore unknown crates for now.
     delete currentCratesObj['[Unknown]'];

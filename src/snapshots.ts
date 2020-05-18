@@ -51,6 +51,15 @@ export declare interface Snapshot {
 }
 
 
+function crateOrFunctionName(crate: Crate) : string {
+  if (crate.crate) {
+    // It's really a function....
+    return `${crate.crate} : ${crate.name}`
+  }
+  return crate.name
+}
+
+
 export function compareSnapshots(
   packageName: string,
   masterCommit: string | null,
@@ -73,11 +82,11 @@ export function compareSnapshots(
   }
 
   for (const o of currentCrateOrFunction) {
-    currentCratesObj[o.name] = o.size
+    currentCratesObj[crateOrFunctionName(o)] = o.size
   }
   const masterCratesObj: { [key: string]: number } = {}
   for (const o of masterCrateOrFunction || []) {
-    masterCratesObj[o.name] = o.size
+    masterCratesObj[crateOrFunctionName(o)] = o.size
   }
 
   // Ignore unknown crates for now.
