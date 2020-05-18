@@ -4319,7 +4319,7 @@ async function runCargoBloat(cargoPath, packageName) {
     if (!noCrates) {
         flags.push('--crates');
     }
-    const defaultArgs = [
+    let bloatArgs = [
         'bloat',
         ...flags,
         '-n',
@@ -4329,10 +4329,9 @@ async function runCargoBloat(cargoPath, packageName) {
     ];
     let optionalArgs = Object(core.getInput)("bloat_args");
     if (optionalArgs.length > 0) {
-        const output = await captureOutput(cargoPath, ["bloat", ...optionalArgs.split(" ")]);
-        return JSON.parse(output);
+        bloatArgs = ["bloat", ...optionalArgs.split(' ')];
     }
-    const output = await captureOutput(cargoPath, defaultArgs);
+    const output = await captureOutput(cargoPath, bloatArgs);
     return JSON.parse(output);
 }
 async function runCargoTree(cargoPath, packageName) {
