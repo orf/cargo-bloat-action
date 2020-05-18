@@ -54,12 +54,14 @@ export async function installCargoDependencies(cargoPath: string): Promise<void>
 }
 
 export async function runCargoBloat(cargoPath: string, packageName: string): Promise<BloatOutput> {
+  const noCrates = core.getInput("by_function")
+
   const defaultArgs = [
     'bloat',
     '--release',
     '--message-format=json',
     '--all-features',
-    '--crates',
+    noCrates ? '' :  '--crates',
     '-n',
     '0',
     '-p',
