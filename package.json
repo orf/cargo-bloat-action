@@ -49,6 +49,6 @@
     "@types/node": "^13.13.5",
     "@zeit/ncc": "^0.22.1",
     "js-yaml": "^3.13.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.2"
   }
 }
