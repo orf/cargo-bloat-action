@@ -4213,8 +4213,8 @@ async function captureOutput(cmd, args) {
 
 function crateOrFunctionName(crate) {
     const name = crate.crate ? `(${crate.crate}) ${crate.name}` : crate.name;
-    if (name.length > 65) {
-        return `${name.substring(0, 65)}...`;
+    if (name.length > 70) {
+        return `${name.substring(0, 70)}...`;
     }
     return name;
 }
