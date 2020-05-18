@@ -4212,11 +4212,11 @@ async function captureOutput(cmd, args) {
 
 
 function crateOrFunctionName(crate) {
-    if (crate.crate) {
-        // It's really a function....
-        return `${crate.crate} : ${crate.name}`;
+    const name = crate.crate ? `${crate.crate} : ${crate.name}` : crate.name;
+    if (name.length > 65) {
+        return `${name.substring(0, 65)}...`;
     }
-    return crate.name;
+    return name;
 }
 function compareSnapshots(packageName, masterCommit, current, master) {
     const masterFileSize = (master === null || master === void 0 ? void 0 : master.bloat["file-size"]) || 0;
