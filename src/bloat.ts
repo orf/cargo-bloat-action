@@ -12,7 +12,9 @@ export declare class Versions {
 export declare interface BloatOutput {
   'file-size': number
   'text-section-size': number
-  crates: Array<Crate>
+  // Yeah this makes no sense and is hacky as hell. Sue me.
+  crates: Array<Crate> | undefined,
+  functions: Array<Crate> | undefined
 }
 
 export declare interface Package {

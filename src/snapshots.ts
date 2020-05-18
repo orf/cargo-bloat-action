@@ -2,7 +2,7 @@ import axios from 'axios'
 import * as core from '@actions/core'
 import {context} from '@actions/github'
 import * as Diff from 'diff'
-import {Change, Hunk} from 'diff'
+import {Change} from 'diff'
 import {Package} from "./bloat"
 import {shouldIncludeInDiff, treeToDisplay} from "./utils"
 
@@ -37,6 +37,7 @@ export declare interface SnapshotDifference {
 }
 
 export declare interface Crate {
+  crate: string | null
   name: string
   size: number
 }
@@ -63,11 +64,19 @@ export function compareSnapshots(
   const textDifference = current.bloat["text-section-size"] - masterTextSize
 
   const currentCratesObj: { [key: string]: number } = {}
-  for (const o of current.bloat.crates) {
+  const currentCrateOrFunction = current.bloat.crates ? current.bloat.crates : current.bloat.functions
+  const masterCrateOrFunction = master?.bloat.crates ? master?.bloat.crates : master?.bloat.functions
+
+  // Should never happen
+  if (currentCrateOrFunction == undefined) {
+    throw Error("Neither crates or functions are defined!")
+  }
+
+  for (const o of currentCrateOrFunction) {
     currentCratesObj[o.name] = o.size
   }
   const masterCratesObj: { [key: string]: number } = {}
-  for (const o of master?.bloat.crates || []) {
+  for (const o of masterCrateOrFunction || []) {
     masterCratesObj[o.name] = o.size
   }
 

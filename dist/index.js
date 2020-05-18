@@ -4217,11 +4217,17 @@ function compareSnapshots(packageName, masterCommit, current, master) {
     const sizeDifference = current.bloat["file-size"] - masterFileSize;
     const textDifference = current.bloat["text-section-size"] - masterTextSize;
     const currentCratesObj = {};
-    for (const o of current.bloat.crates) {
+    const currentCrateOrFunction = current.bloat.crates ? current.bloat.crates : current.bloat.functions;
+    const masterCrateOrFunction = (master === null || master === void 0 ? void 0 : master.bloat.crates) ? master === null || master === void 0 ? void 0 : master.bloat.crates : master === null || master === void 0 ? void 0 : master.bloat.functions;
+    // Should never happen
+    if (currentCrateOrFunction == undefined) {
+        throw Error("Neither crates or functions are defined!");
+    }
+    for (const o of currentCrateOrFunction) {
         currentCratesObj[o.name] = o.size;
     }
     const masterCratesObj = {};
-    for (const o of (master === null || master === void 0 ? void 0 : master.bloat.crates) || []) {
+    for (const o of masterCrateOrFunction || []) {
         masterCratesObj[o.name] = o.size;
     }
     // Ignore unknown crates for now.
