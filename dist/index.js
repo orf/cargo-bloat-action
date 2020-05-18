@@ -4311,12 +4311,17 @@ async function installCargoDependencies(cargoPath) {
 }
 async function runCargoBloat(cargoPath, packageName) {
     const noCrates = Object(core.getInput)("by_function");
-    const defaultArgs = [
-        'bloat',
+    const flags = [
         '--release',
         '--message-format=json',
         '--all-features',
-        noCrates ? '' : '--crates',
+    ];
+    if (!noCrates) {
+        flags.push('--crates');
+    }
+    const defaultArgs = [
+        'bloat',
+        ...flags,
         '-n',
         '0',
         '-p',
