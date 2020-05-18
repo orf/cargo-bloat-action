@@ -46,10 +46,10 @@ export function shouldIncludeInDiff(
   oldValue: number | null
 ): boolean {
   const changedThreshold = 4000
-  const newThreshold = 350
+  const newThreshold = 512
 
   if (oldValue == null) {
-    // If we are adding a new crate that adds less than 350 bytes of bloat, ignore it.
+    // If we are adding a new crate that adds less than 512 bytes of bloat, ignore it.
     return newValue > newThreshold
   }
   const numberDiff = newValue - oldValue
