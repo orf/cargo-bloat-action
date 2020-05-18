@@ -52,7 +52,7 @@ export declare interface Snapshot {
 
 
 function crateOrFunctionName(crate: Crate) : string {
-  const name = crate.crate ? `${crate.crate} : ${crate.name}` : crate.name
+  const name = crate.crate ? `(${crate.crate}) ${crate.name}` : crate.name
   if (name.length > 65) {
     return `${name.substring(0, 65)}...`
   }
