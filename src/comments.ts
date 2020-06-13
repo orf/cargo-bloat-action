@@ -1,4 +1,5 @@
 import * as github from '@actions/github'
+import {GitHub} from "@actions/github/lib/utils";
 import {context} from '@actions/github'
 import * as core from '@actions/core'
 import {SnapshotDifference} from './snapshots'
@@ -6,9 +7,9 @@ import fileSize from 'filesize'
 import table from 'text-table'
 import {shouldIncludeInDiff} from "./utils"
 
-export function githubClient(): github.GitHub {
+export function githubClient(): InstanceType<typeof GitHub> {
   const token = core.getInput('token')
-  return new github.GitHub(token)
+  return github.getOctokit(token)
 }
 
 async function postNewComment(message: string): Promise<void> {
