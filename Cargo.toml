@@ -2,7 +2,7 @@
 
 members = [
     "example_project",
-    "ignored_project",
+    "lib_project",
 ]
 
 [profile.release]

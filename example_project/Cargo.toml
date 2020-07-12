@@ -5,4 +5,4 @@ authors = ["Tom Forbes <tom@tomforb.es>"]
 edition = "2018"
 
 [dependencies]
-ureq = { version = "*", default-features = false }
+lib_project = { path = "../lib_project"}

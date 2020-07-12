@@ -48,4 +48,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           by_function: true
-          exclude_packages: "rust_project_ignored"
+          exclude_packages: "lib_project"

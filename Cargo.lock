@@ -26,6 +26,13 @@ version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "lib_project"
+version = "0.1.0"
+dependencies = [
+ "ureq 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "matches"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -47,7 +54,7 @@ dependencies = [
 name = "rust_project2"
 version = "0.1.0"
 dependencies = [
- "ureq 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lib_project 0.1.0",
 ]
 
 [[package]]
