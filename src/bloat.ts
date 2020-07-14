@@ -99,7 +99,12 @@ export async function runCargoTree(cargoPath: string, packageName: string): Prom
 }
 
 export async function getCargoPackages(cargoPath: string): Promise<Array<CargoPackage>> {
+  const exclude_packages = core.getInput("exclude_packages").split(" ");
   const args = ['metadata', '--no-deps', '--format-version=1']
   const output = await captureOutput(cargoPath, args)
-  return (JSON.parse(output) as CargoMetadata).packages
+  let result = (JSON.parse(output) as CargoMetadata).packages;
+  if (exclude_packages.length > 0) {
+    result = result.filter(pack => !exclude_packages.includes(pack.name));
+  }
+  return result;
 }

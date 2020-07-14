@@ -44,6 +44,7 @@ jobs:
 * `by_function` - Display per-function bloat instead of per-crate bloat
 * `bloat_args` - Custom arguments to pass to `cargo bloat`
 * `tree_args` - Custom arguments to pass to `cargo tree`
+* `exclude_packages` - packages to exclude from running `cargo bloat` on (useful for projects unsupported by cargo bloat such as static libraries).
 
 ## Screenshots
 

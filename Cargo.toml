@@ -2,6 +2,7 @@
 
 members = [
     "example_project",
+    "lib_project",
 ]
 
 [profile.release]

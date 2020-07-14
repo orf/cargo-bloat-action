@@ -1,8 +1,8 @@
 [package]
-name = "rust_project2"
+name = "lib_project"
 version = "0.1.0"
 authors = ["Tom Forbes <tom@tomforb.es>"]
 edition = "2018"
 
 [dependencies]
-lib_project = { path = "../lib_project"}
+ureq = { version = "*", default-features = false }

@@ -17,6 +17,9 @@ inputs:
   by_function:
     description: 'If set, display per-function bloat instead of per-crate bloat.'
     required: false
+  exclude_packages:
+    description: 'Packages to exclude from running cargo bloat onto.'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
