@@ -104,7 +104,7 @@ export async function getCargoPackages(cargoPath: string): Promise<Array<CargoPa
   const output = await captureOutput(cargoPath, args)
   let result = (JSON.parse(output) as CargoMetadata).packages;
   if (exclude_packages.length > 0) {
-    result = result.filter(pack => exclude_packages.includes(pack.name) == false);
+    result = result.filter(pack => !exclude_packages.includes(pack.name));
   }
   return result;
 }
