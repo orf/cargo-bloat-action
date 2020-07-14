@@ -1,0 +1,8 @@
+[package]
+name = "rust_project_ignored"
+version = "0.1.0"
+authors = ["Tom Forbes <tom@tomforb.es>"]
+edition = "2018"
+
+[dependencies]
+ureq = { version = "*", default-features = false }

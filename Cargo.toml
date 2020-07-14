@@ -2,6 +2,7 @@
 
 members = [
     "example_project",
+    "ignored_project",
 ]
 
 [profile.release]
