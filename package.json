@@ -43,7 +43,7 @@
     "@types/handlebars-helpers": "^0.5.2",
     "@types/jest": "^26.0.4",
     "@types/lodash.set": "^4.3.6",
-    "@types/node": "^14.0.23",
+    "@types/node": "^14.0.24",
     "@types/text-table": "^0.2.1",
     "@types/treeify": "^1.0.0",
     "@zeit/ncc": "^0.22.3",
