@@ -31,7 +31,7 @@
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
     "@actions/io": "^1.0.2",
-    "axios": "^0.20.0",
+    "axios": "^0.21.0",
     "diff": "^4.0.2",
     "filesize": "^6.1.0",
     "lodash": "^4.17.20",
