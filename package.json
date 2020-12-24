@@ -39,7 +39,7 @@
     "treeify": "^1.1.0"
   },
   "devDependencies": {
-    "@types/diff": "^4.0.2",
+    "@types/diff": "^5.0.0",
     "@types/handlebars-helpers": "^0.5.2",
     "@types/jest": "^26.0.10",
     "@types/lodash.set": "^4.3.6",
