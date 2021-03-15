@@ -31,12 +31,8 @@ jobs:
       - uses: actions/checkout@master
       - name: Install Rust
         uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
       - name: Run cargo bloat
         uses: orf/cargo-bloat-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Options
@@ -45,6 +41,7 @@ jobs:
 * `bloat_args` - Custom arguments to pass to `cargo bloat`
 * `tree_args` - Custom arguments to pass to `cargo tree`
 * `exclude_packages` - packages to exclude from running `cargo bloat` on (useful for projects unsupported by cargo bloat such as static libraries).
+* `token` - Speify a custom GitHub Personal Access Token with at least `repo` scope. Defaults to `${{ github.token }}`
 
 ## Screenshots
 
