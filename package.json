@@ -30,7 +30,7 @@
     "@actions/core": "^1.2.4",
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
-    "@actions/io": "^1.0.2",
+    "@actions/io": "^1.1.0",
     "axios": "^0.20.0",
     "diff": "^4.0.2",
     "filesize": "^6.1.0",
