@@ -6,8 +6,9 @@ branding:
   color: blue
 inputs:
   token:
-    description: 'Github token to use'
-    required: true
+    description: 'Github token to use, defaults to github.token'
+    required: false
+    default: ${{ github.token }}
   bloat_args:
     description: 'Custom arguments to pass to cargo bloat'
     required: false

@@ -46,6 +46,5 @@ jobs:
 
       - uses: ./
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           by_function: true
           exclude_packages: "lib_project"
