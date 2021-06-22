@@ -77,3 +77,8 @@ export async function captureOutput(
   await exec.exec(cmd, args, options)
   return stdout
 }
+
+export async function refToSha(branch: string): Promise<string> {
+  let sha = await captureOutput("git", ["rev-parse", branch]);
+  return sha.trim();
+}

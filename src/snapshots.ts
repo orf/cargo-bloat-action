@@ -1,9 +1,12 @@
-import axios from 'axios'
+import {restoreCache, saveCache} from '@actions/cache';
 import * as core from '@actions/core'
-import {context} from '@actions/github'
+import {exec} from '@actions/exec';
+import * as github from '@actions/github';
+import {context} from '@actions/github';
 import * as Diff from 'diff'
 import {Change} from 'diff'
-import {Package} from "./bloat"
+import {promises} from 'fs';
+import {BloatOutput, CargoPackage, getCargoPackages, Package, runCargoBloat, runCargoTree, Versions} from "./bloat"
 import {shouldIncludeInDiff, treeToDisplay} from "./utils"
 
 declare interface CrateDifference {
@@ -143,27 +146,104 @@ export function compareSnapshots(
   }
 }
 
-export async function fetchSnapshot(
-  repo: string,
-  toolchain: string
-): Promise<Snapshot | null> {
-  // Don't be a dick, please.
-  const url = `https://us-central1-cargo-bloat.cloudfunctions.net/fetch`
-  const res = await axios.get(url, {params: {repo, toolchain}})
-  core.info(`Response: ${JSON.stringify(res.data)}`)
-  // This is a bit screwed.
-  if (Object.keys(res.data).length == 0) {
-    return null
-  }
-  return res.data as Snapshot
+function cacheKey(sha: string): string {
+  return `bloat-cache-${sha}`;
+}
+function snapshotFilename(sha: string): string {
+  return `${cacheKey(sha)}.json`;
 }
 
-export async function recordSnapshot(
-  repo: string,
+async function fetchSnapshot(
+  sha: string,
+): Promise<Snapshot | null> {
+  let path = snapshotFilename(sha);
+  let res = await restoreCache([path], cacheKey(sha));
+  if (res === undefined) return null;
+
+  try {
+    let content = (await promises.readFile(path)).toString();
+    return JSON.parse(content);
+  }
+  catch (e) {
+    core.error(`Error while restoring cached snapshot: ${e}`);
+    return null;
+  }
+}
+
+async function recordSnapshot(
+  sha: string,
   snapshot: Snapshot
 ): Promise<void> {
-  // Don't be a dick, please.
-  const url = `https://us-central1-cargo-bloat.cloudfunctions.net/ingest`
-  core.info(`Post data: ${JSON.stringify(snapshot, undefined, 2)}`)
-  await axios.post(url, snapshot, {params: {repo}})
+  core.info(`Storing bloat snapshot of ${sha} into cache`)
+  let path = snapshotFilename(sha);
+  await promises.writeFile(path, JSON.stringify(snapshot, undefined, 2));
+  let key = cacheKey(sha);
+
+  try {
+    await saveCache([path], `${key}-${process.env.GITHUB_RUN_ID}`);
+  } catch (e) {
+    core.error(`Error while storing cached snapshot: ${e}`);
+  }
+}
+
+export async function computeSnapshot(cargoPath: string, versions: Versions, sha: string): Promise<Snapshot> {
+  const packages = await core.group(
+    'Inspecting cargo packages',
+    async (): Promise<Array<CargoPackage>> => {
+      return await getCargoPackages(cargoPath)
+    }
+  )
+
+  const packageData : Record<string, Package> = {}
+
+  for (const cargoPackage of packages) {
+    const bloatData = await core.group(
+      `Running cargo-bloat on package ${cargoPackage.name}`,
+      async (): Promise<BloatOutput> => {
+        return await runCargoBloat(cargoPath, cargoPackage.name)
+      }
+    )
+    const treeData = await core.group(
+      `Running cargo-tree on package ${cargoPackage.name}`,
+      async (): Promise<string> => {
+        return await runCargoTree(cargoPath, cargoPackage.name)
+      }
+    )
+    packageData[cargoPackage.name] = {bloat: bloatData, tree: treeData}
+  }
+
+  let snapshot = {
+    commit: sha,
+    toolchain: versions.toolchain,
+    rustc: versions.rustc,
+    bloat: versions.bloat,
+    packages: packageData,
+  };
+
+  await recordSnapshot(sha, snapshot);
+
+  return snapshot;
+}
+
+/**
+ * Either restore the snapshot with the given `sha` from cache, or checkout the given `sha` and compute the snapshot.
+ */
+export async function restoreOrComputeSnapshot(cargoPath: string, versions: Versions, sha: string): Promise<Snapshot> {
+  let restored = await fetchSnapshot(sha);
+  if (restored !== null) {
+    core.info(`Snapshot of ${sha} was successfully restored from cache`);
+    return restored;
+  }
+  core.info(`Snapshot of ${sha} was not found in the cache, it will recomputed`);
+
+  // Temporarily checkout the target branch
+  core.info(`Checking out ${sha}`);
+  await exec("git", ["checkout", sha]);
+  let snapshot = await computeSnapshot(cargoPath, versions, sha);
+
+  // Checkout the original version back
+  core.info(`Checking out ${github.context.sha}`);
+  await exec("git", ["checkout", github.context.sha]);
+
+  return snapshot;
 }
