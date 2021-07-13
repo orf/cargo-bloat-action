@@ -40,7 +40,7 @@ async function run(): Promise<void> {
   )
 
   let currentSnapshot = await computeSnapshot(cargoPath, versions, github.context.sha);
-  if (github.context.eventName != "pull_request") return;
+  if (!github.context.eventName.startsWith("pull_request")) return;
 
   // Download base branch commit
   await exec("git", ["fetch", "--depth", "1", "origin", process.env.GITHUB_BASE_REF as string]);
