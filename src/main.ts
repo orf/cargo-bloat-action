@@ -14,7 +14,7 @@ import * as io from "@actions/io"
 import {createComment, createOrUpdateComment} from "./comments"
 import {refToSha} from './utils';
 
-const ALLOWED_EVENTS = ['pull_request', 'push']
+const ALLOWED_EVENTS = ['pull_request', 'pull_request_target', 'push']
 
 async function run(): Promise<void> {
   if (!ALLOWED_EVENTS.includes(github.context.eventName)) {

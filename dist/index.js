@@ -7211,7 +7211,7 @@ ${comment}
 
 
 
-const ALLOWED_EVENTS = ['pull_request', 'push'];
+const ALLOWED_EVENTS = ['pull_request', 'pull_request_target', 'push'];
 async function run() {
     if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
         Object(core.setFailed)(`This can only be used with the following events: ${ALLOWED_EVENTS.join(', ')}`);
