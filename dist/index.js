@@ -7225,7 +7225,7 @@ async function run() {
         return getToolchainVersions();
     });
     let currentSnapshot = await computeSnapshot(cargoPath, versions, github.context.sha);
-    if (!Object(github.context.eventName.startsWith)("pull_request"))
+    if (github.context.eventName === "push")
         return;
     // Download base branch commit
     await Object(exec.exec)("git", ["fetch", "--depth", "1", "origin", process.env.GITHUB_BASE_REF]);
