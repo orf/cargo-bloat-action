@@ -1,23 +1,20 @@
 import * as core from '@actions/core'
+import {exec} from '@actions/exec';
 import * as github from '@actions/github'
 import {
   compareSnapshots,
-  Snapshot,
-  fetchSnapshot,
-  recordSnapshot
+  computeSnapshot, restoreOrComputeSnapshot
 } from './snapshots'
 import {
-  BloatOutput, CargoPackage, getCargoPackages,
   getToolchainVersions,
-  installCargoDependencies, Package,
-  runCargoBloat, runCargoTree,
+  installCargoDependencies,
   Versions
 } from './bloat'
-// import {createOrUpdateComment, createSnapshotComment} from './comments'
 import * as io from "@actions/io"
-import {createComment, createOrUpdateComment, createSnapshotComment} from "./comments"
+import {createComment, createOrUpdateComment} from "./comments"
+import {refToSha} from './utils';
 
-const ALLOWED_EVENTS = ['pull_request', 'push']
+const ALLOWED_EVENTS = ['pull_request', 'pull_request_target', 'push']
 
 async function run(): Promise<void> {
   if (!ALLOWED_EVENTS.includes(github.context.eventName)) {
@@ -42,55 +39,15 @@ async function run(): Promise<void> {
     }
   )
 
-  const packages = await core.group(
-    'Inspecting cargo packages',
-    async (): Promise<Array<CargoPackage>> => {
-      return await getCargoPackages(cargoPath)
-    }
-  )
+  let currentSnapshot = await computeSnapshot(cargoPath, versions, github.context.sha);
+  if (github.context.eventName === "push") return;
 
-  const packageData : Record<string, Package> = {}
+  // Download base branch commit
+  await exec("git", ["fetch", "--depth", "1", "origin", process.env.GITHUB_BASE_REF as string]);
 
-  for (const cargoPackage of packages) {
-    const bloatData = await core.group(
-      `Running cargo-bloat on package ${cargoPackage.name}`,
-      async (): Promise<BloatOutput> => {
-        return await runCargoBloat(cargoPath, cargoPackage.name)
-      }
-    )
-    const treeData = await core.group(
-      `Running cargo-tree on package ${cargoPackage.name}`,
-      async (): Promise<string> => {
-        return await runCargoTree(cargoPath, cargoPackage.name)
-      }
-    )
-    packageData[cargoPackage.name] = {bloat: bloatData, tree: treeData}
-  }
+  let referenceSha = await refToSha("FETCH_HEAD");
+  const masterSnapshot = await restoreOrComputeSnapshot(cargoPath, versions, referenceSha);
 
-  const repo_path = `${github.context.repo.owner}/${github.context.repo.repo}`
-
-  const currentSnapshot: Snapshot = {
-    commit: github.context.sha,
-    toolchain: versions.toolchain,
-    rustc: versions.rustc,
-    bloat: versions.bloat,
-    packages: packageData,
-  }
-
-  if (github.context.eventName == 'push') {
-    // Record the results
-    return await core.group('Recording', async () => {
-      return await recordSnapshot(repo_path, currentSnapshot)
-    })
-  }
-
-  // A merge request
-  const masterSnapshot = await core.group(
-    'Fetching last build',
-    async (): Promise<Snapshot | null> => {
-      return await fetchSnapshot(repo_path, versions.toolchain)
-    }
-  )
   await core.group(
     'Posting comment',
     async (): Promise<void> => {
