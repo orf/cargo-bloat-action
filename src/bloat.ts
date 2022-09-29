@@ -76,7 +76,12 @@ export async function runCargoBloat(cargoPath: string, packageName: string): Pro
   let optionalArgs = core.getInput("bloat_args")
 
   if (optionalArgs.length > 0) {
-    bloatArgs = ["bloat", ...optionalArgs.split(' ')]
+    bloatArgs = [
+      "bloat",
+      ...optionalArgs.split(' '),
+      '-p',
+      packageName
+    ]
   }
   bloatArgs.push('--message-format=json', '-n', '0')
   const output = await captureOutput(cargoPath, bloatArgs)
